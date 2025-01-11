@@ -19,7 +19,7 @@ pub fn Navbar() -> Element {
                 // style:"background:green;",
                 Link {
                     class:" px-8 py-3 md:px-4 md:py-3 cursor-pointer hover:bg-[rgba(211,229,255,0.5)] dark:hover:bg-[rgb(125,147,194)]",
-                    to: Route::Todo {},
+                    to: Route::Canvas   {},
                     img{
                         class:"w-[24px] h-[25px] ",
                         src: match *context.current_theme.read(){
@@ -31,7 +31,7 @@ pub fn Navbar() -> Element {
                 }
                 Link {
                     class:"px-4 py-3 cursor-pointer hover:bg-[rgba(211,229,255,0.5)] dark:hover:bg-[rgb(125,147,194)]",
-                    to: Route::Todo {},
+                    to: Route:: Jot{},
                     img{
                         class:"mt-[0px] w-[26px] h-[26px]",
                         src: match *context.current_theme.read(){
@@ -43,7 +43,7 @@ pub fn Navbar() -> Element {
                 }
                 Link {
                     class:"px-4 py-3 cursor-pointer hover:bg-[rgba(211,229,255,0.5)] dark:hover:bg-[rgb(125,147,194)]",
-                    to: Route::Todo {},
+                    to: Route::Jot {},
                     img{
                         class:"w-[23px] h-[25px]",
                         src: match *context.current_theme.read(){
@@ -60,7 +60,7 @@ pub fn Navbar() -> Element {
                 // style:"background:blue;",
                 Link {
                     class:"px-4 py-3 cursor-pointer hover:bg-[rgba(211,229,255,0.5)] dark:hover:bg-[rgb(125,147,194)]",
-                    to: Route::Todo {},
+                    to: Route::Jot {},
                     img{
                         class:"mt-[3.5px] w-[23px] h-[20px]",
                         src: match *context.current_theme.read(){

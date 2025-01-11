@@ -8,7 +8,9 @@ module.exports = {
       borderWidth: {
         1: "1px", // Add custom border width
       },
-
+      letterSpacing: {
+        tightest: '-0.25em', // Adjust as needed (e.g., for -4px)
+      },
       typography: {
         DEFAULT: {
           css: {

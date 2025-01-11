@@ -1,16 +1,28 @@
 use dioxus::prelude::*;
-
-mod todo;
-use todo::todo::{Todo, TodoItem};
-mod components;
-use components::navbar::Navbar;
+mod jot;
+use jot::jot::{Jot, JotItem};
+mod canvas;
+use canvas::canvas::Canvas;
+mod navbar;
+use navbar::navbar::Navbar;
+mod home;
+use home::home::Home;
+mod upload;
+use upload::upload::Upload;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
-#[rustfmt::skip]
+
 enum Route {
     // #[layout(Navbar)]
     #[route("/")]
-    Todo{},
+    Home {},
+    #[route("/jot")]
+    Jot {},
+    #[route("/canvas")]
+    Canvas {},
+    #[route("/upload")]
+    Upload {},
+
     #[route("/blog/:id")]
     Blog { id: i32 },
 }
