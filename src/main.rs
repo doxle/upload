@@ -1,14 +1,19 @@
 use dioxus::prelude::*;
-mod jot;
-use jot::jot::{Jot, JotItem};
 mod canvas;
 use canvas::canvas::Canvas;
-mod navbar;
-use navbar::navbar::Navbar;
+mod components {
+    pub mod dialog;
+}
+// use components::navbar::Navbar;
 mod home;
 use home::home::Home;
 mod upload;
 use upload::upload::Upload;
+mod legal;
+use legal::legal::Legal;
+mod jot;
+use jot::jot::Jot;
+mod service;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 
@@ -22,6 +27,8 @@ enum Route {
     Canvas {},
     #[route("/upload")]
     Upload {},
+    #[route("/legal")]
+    Legal {},
 
     #[route("/blog/:id")]
     Blog { id: i32 },
@@ -39,9 +46,18 @@ pub struct ThemeContext {
     // pub toggle_theme: Rc<dyn Fn()>,
 }
 
-const MAIN_CSS: Asset = asset!("/assets/main.css");
+// const MAIN_CSS: Asset = asset!("/assets/main.css");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
-const FONT: Asset = asset!("/assets/HelveticaNeue.ttc");
+// const FONT_100: Asset = asset!("/assets/HelveticaNeue-Thin.woff2");
+// const FONT_200: Asset = asset!("/assets/HelveticaNeue-UltraLight.woff2");
+// const FONT_200_ITALIC: Asset = asset!("/assets/HelveticaNeue-UltraLightItalic.woff2");
+// const FONT_300: Asset = asset!("/assets/HelveticaNeue-Light.woff2");
+// const FONT_700: Asset = asset!("/assets/HelveticaNeue-Bold.woff2");
+// const FONT_100: Asset = asset!("/assets/HelveticaNeue-Thin.ttf");
+// const FONT_200: Asset = asset!("/assets/HelveticaNeue-UltraLight.ttf");
+// const FONT_200_ITALIC: Asset = asset!("/assets/HelveticaNeue-UltraLightItalic.ttf");
+// const FONT_300: Asset = asset!("/assets/HelveticaNeue-Light.ttf");
+// const FONT_700: Asset = asset!("/assets/HelveticaNeue-Bold.ttf");
 
 fn main() {
     dioxus::launch(App);
@@ -86,8 +102,12 @@ fn App() -> Element {
                 bg_class
             ),
             document::Link { rel: "stylesheet", href: TAILWIND_CSS }
-            document::Link { rel: "stylesheet", href: FONT }
-            document::Link { rel: "stylesheet", href: MAIN_CSS }
+            // document::Link { rel: "stylesheet", href: MAIN_CSS }
+            // document::Link { rel: "stylesheet", href: FONT_100 }
+            // document::Link { rel: "stylesheet", href: FONT_200 }
+            // document::Link { rel: "stylesheet", href: FONT_200_ITALIC }
+            // document::Link { rel: "stylesheet", href: FONT_300 }
+            // document::Link { rel: "stylesheet", href: FONT_700 }
             Router::<Route> {}
         }
     }

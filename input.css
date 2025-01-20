@@ -9,5 +9,60 @@
 /* Add this to extend Tailwind with your custom font */
 body {
     /* font-family: "Inter", "Montserrat", "Lexend", sans-serif; */
-    font-family: "HelveticaNeue", sans-serif;
+    font-family: "HelveticaNeue", Helvetica, Arial, sans-serif;
+}
+/* Global font-smoothing styles */
+
+@font-face {
+    font-family: "Helvetica Neue";
+    font-style: normal;
+    font-weight: 100; /* Thin */
+    src:
+        url("/assets/HelveticaNeue-Thin.woff2") format("woff2"),
+        url("/assets/HelveticaNeue-Thin.woff") format("woff");
+}
+
+@font-face {
+    font-family: "Helvetica Neue";
+    font-style: normal;
+    font-weight: 200; /* Extra Light */
+    src:
+        url("/assets/HelveticaNeue-UltraLight.woff2") format("woff2"),
+        url("/assets/HelveticaNeue-UltraLight.woff") format("woff");
+}
+
+@font-face {
+    font-family: "Helvetica Neue";
+    font-style: italic;
+    font-weight: 200; /* Extra Light Italic */
+    src:
+        url("/assets/HelveticaNeue-UltraLightItalic.woff2") format("woff2"),
+        url("/assets/HelveticaNeue-UltraLightItalic.woff") format("woff");
+}
+
+@font-face {
+    font-family: "Helvetica Neue";
+    font-style: normal;
+    font-weight: 300; /* Light */
+    src:
+        url("/assets/HelveticaNeue-Light.woff2") format("woff2"),
+        url("/assets/HelveticaNeue-Light.woff") format("woff");
+}
+
+@font-face {
+    font-family: "Helvetica Neue";
+    font-style: normal;
+    font-weight: 400; /* Light */
+    src:
+        url("/assets/HelveticaNeue.woff2") format("woff2"),
+        url("/assets/HelveticaNeue.woff") format("woff");
+}
+
+@font-face {
+    font-family: "Helvetica Neue";
+    font-style: normal;
+    font-weight: 700; /* Bold */
+    src:
+        url("/assets/HelveticaNeue-Bold.woff2") format("woff2"),
+        url("/assets/HelveticaNeue-Bold.woff") format("woff");
 }

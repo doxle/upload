@@ -35,12 +35,12 @@ canvas.addEventListener('mousemove', event => {
   if (isDrawing) {
     const endX = event.offsetX;
     const endY = event.offsetY;
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-    startX = endX;
-    startY = endY;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      startX = endX;
+      startY = endY;
   }
 });
 
@@ -75,3 +75,34 @@ canvas.addEventListener('touchend', () => {
 canvas.addEventListener('touchcancel', () => {
   isDrawing = false;
 });
+
+
+const Konva = require('konva');
+
+// Example usage
+const stage = new Konva.Stage({
+  container: 'container',
+  width: 500,
+  height: 500,
+});
+
+const layer = new Konva.Layer();
+stage.add(layer);
+
+const circle = new Konva.Circle({
+  x: stage.width() / 2,
+  y: stage.height() / 2,
+  radius: 70,
+  fill: 'red',
+  stroke: 'black',
+  strokeWidth: 4,
+});
+
+layer.add(circle);
+layer.draw();
+
+
+// <script src="https://cdn.jsdelivr.net/npm/konva@8.4.3/konva.min.js"></script>
+// <script src="your-script.js"></script>
+// </body>
+// </html

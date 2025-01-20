@@ -1,6 +1,6 @@
 # SK Notes
 - Started renaming everything to jot from todo
--
+- font-100=thin, font-200=extra light, font-300=font-light, font-700=bold
 
 
 
