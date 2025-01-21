@@ -3,7 +3,6 @@
 // 3-GET PRESIGNED URL
 // 4-IF > 5MB DO MULTIPART IF NOT DO SINGLE PART
 use anyhow::{Context, Error};
-use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
 use dioxus::logger::tracing::warn;
 use serde::Deserialize;
@@ -45,7 +44,7 @@ pub(crate) async fn upload_plans(
     let client = reqwest::Client::new();
     let s3_response = client
         .put(&presigned.url)
-        .header("Content-Type", "application/zip") // Explicitly set the content type
+        // .header("Content-Type", "application/zip") // Explicitly set the content type
         .body(zipped_file) // Use zip_data here
         .send()
         .await
@@ -114,8 +113,14 @@ pub(crate) fn zip_files_in_memory(
 
 // GET THE PRESIGNED URL FROM THE BACKEND
 pub(crate) async fn get_presigned_url() -> Result<PresignedUrlResponse, Error> {
-    let lambda_url =
-        format!("http://localhost:9000/lambda-url/lambda_upload_plans/?files=files.zip");
+    let lambda_url = format!(
+        "http://localhost:9000/lambda-url/lambda_upload_plans/?bucket={}&key={}",
+        "dioxus-upload", "files.zip"
+    );
+    // let lambda_url1 = format!(
+    //     "http://localhost:9000/lambda-url/upload_files/?bucket={}&key={}",
+    //     "dioxus-upload", "files.zip"
+    // );
     warn!("Calling for presigned url");
     let response = reqwest::get(&lambda_url)
         .await

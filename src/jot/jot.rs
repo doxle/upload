@@ -1,9 +1,8 @@
 use std::collections::BTreeMap;
 
 use crate::{Theme, ThemeContext};
-use anyhow::{Context, Error};
-use chrono::{DateTime, Utc};
-use dioxus::logger::*;
+// use chrono::{DateTime, Utc};
+
 use dioxus::prelude::*;
 use serde::Deserialize;
 
@@ -12,8 +11,8 @@ pub struct JotItem {
     pub id: u32,
     pub content: String,
     pub checked: bool,
-    #[serde(default = "Utc::now")]
-    pub created_at: DateTime<Utc>,
+    // #[serde(default = "Utc::now")]
+    // pub created_at: DateTime<Utc>,
 }
 
 impl Default for JotItem {
@@ -22,7 +21,7 @@ impl Default for JotItem {
             id: 0,
             content: String::new(),
             checked: false,
-            created_at: Utc::now(),
+            // created_at: Utc::now(),
         }
     }
 }
@@ -70,7 +69,7 @@ pub fn JotHeader() -> Element {
                 checked: false,
                 ..Default::default()
             };
-            JOTS.write().insert(jotid() as u32, jot_item);
+            // JOTS.write().insert(jotid() as u32, jot_item);
             jotid += 1;
         }
     };
