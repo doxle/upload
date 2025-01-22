@@ -1296,6 +1296,7 @@ dependencies = [
  "reqwest",
  "round",
  "serde",
+ "serde_json",
  "zip",
 ]
 
