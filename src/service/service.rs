@@ -5,17 +5,19 @@
 use anyhow::{Context, Error, Result};
 use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
+use gloo_timers::callback::Timeout;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
 use std::io::{Cursor, Write};
-
+use std::sync::{Arc, Mutex};
+use wasm_bindgen_futures::spawn_local;
 use zip::{
     write::{ExtendedFileOptions, FileOptions},
     CompressionMethod, ZipWriter,
 };
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
 struct ETag {
     part_number: usize,
     etag: String,
@@ -57,6 +59,7 @@ pub(crate) async fn upload_plans(
     if presigned_urls.len() == 1 {
         single_part_upload(zipped_file, presigned_urls).await
     } else {
+        //UPLOAD ID IS ONLY PRESENT FOR MULTI-PART UPLOAD FROM BE
         let upload_id = presigned_response.upload_id;
         match upload_id {
             None => Err(anyhow::anyhow!(
@@ -102,7 +105,7 @@ pub(crate) async fn single_part_upload(
 }
 
 //NEED TO COLLECT ETAGS AFTER EVERY CHUNK AND THEN COMPLETE THE UPLOAD
-// OR WE CAN GET 200 AND NOTHING WILL BE UPLOADED TO S3 TILL WE COMPLETE_MULTIPART_UPLOAD
+// OR WE CAN GET 200 AND NOTHING WILL BE UPLOADED TO S3 TILL WE "COMPLETE_MULTIPART_UPLOAD" FOR S3
 pub(crate) async fn multi_part_upload(
     upload_id: String,
     zip_file: Vec<u8>,
@@ -136,6 +139,8 @@ pub(crate) async fn multi_part_upload(
 
         let status = response.status();
         info!("Status Code: {}", status);
+
+        // IF ERROR
         if !status.is_success() {
             // println!("Failed to upload chunk {}", index + 1);
             return Err(anyhow::anyhow!(
@@ -209,8 +214,117 @@ pub(crate) async fn multi_part_upload(
     Ok(())
 }
 
-// ZIP CRATE CREATES THE FILE SIZE TO BE WAY BIGGER. FOR INSTANCE PDF SIZES WERE 35MB
-// AND THE INCREASED TO 67MB SO ITS NOT GOOD FOR INCREASE SIZES
+pub(crate) async fn _concurrent_multi_part_upload(
+    upload_id: String,
+    zip_file: Vec<u8>,
+    presigned_urls: Vec<String>,
+) -> Result<(), Error> {
+    let chunk_size: usize = 5 * 1024 * 1024;
+    let client = reqwest::Client::new();
+    // let mut etags = Arc::new(Mutex::new(Vec::new()));
+    let urls_length = presigned_urls.len();
+    //BREAK THE FILE IN CHUNK AND UPLOAD THEM
+    for (index, url) in presigned_urls.iter().enumerate() {
+        let client = client.clone();
+        let chunk_start = index * chunk_size;
+        let chunk_end = std::cmp::min(chunk_start + chunk_size, zip_file.len());
+        let current_chunk = zip_file[chunk_start..chunk_end].to_vec();
+        let url = url.clone();
+
+        // PERFORMING CONCURRENT UPLOADS
+        spawn_local(async move {
+            let response = client
+                .put(&url)
+                .body(current_chunk) // Convert the chunk to Vec<u8>
+                .send()
+                .await
+                .context(format!("Failed to upload chunk {}", index + 1));
+
+            // GET THE ETAG HEADERS
+            match response {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        if let Some(etag) = response.headers().get("etag") {
+                            info!(
+                                "Chunk {} uploaded successfully with ETag: {}",
+                                index + 1,
+                                etag.to_str().unwrap()
+                            );
+                            // etags.lock().unwrap().push(ETag {
+                            //     part_number: index + 1,
+                            //     etag: etag.to_str().unwrap().to_string(),
+                            // });
+                        } else {
+                            error!("Failed to get ETag for chunk {}", index + 1);
+                        }
+                    } else {
+                        error!(
+                            "Failed to upload chunk {}, Status: {}, Body: {}",
+                            index + 1,
+                            response.status(),
+                            response
+                                .text()
+                                .await
+                                .unwrap_or_else(|_| "Failed to read response body".into())
+                        );
+                    }
+                }
+                Err(e) => error!("Task failed with error: {}", e),
+            }
+        }); //END OF TASK
+    } //for loop
+
+    // Wait for all uploads to complete by periodically checking the ETag collection
+    let mut completed = false;
+    while !completed {
+        // Timeout::new(100, move || {
+        //     info!("Waiting for all uploads to complete...");
+        //     // let etags = etags.lock().unwrap();
+        //     // if etags.len() == urls_length {
+        //     //     completed = true;
+        //     // }
+        // });
+    }
+
+    // let etags = etags.lock().unwrap();
+
+    // PRINT THE ETAGS TO MAKE SURE THET ARE CORRECT
+    // for etag in etags.iter() {
+    //     info!("ETAGS: {:?}", etag);
+    // }
+
+    // Make a request to complete the multi-part upload
+    let lambda_etags_url = "http://localhost:9000/lambda-url/lambda_upload_plans/";
+    let etags_payload = json!({
+        // "etags": *etags,
+        "upload_id": upload_id,
+        "bucket": "dioxus-upload",
+        "key": "files.zip"
+    });
+
+    //SEND THE ETAG PAYLOAD TO BE
+    let response = client
+        .post(lambda_etags_url)
+        .json(&etags_payload)
+        .send()
+        .await
+        .context("Error making POST request")?;
+
+    if response.status().is_success() {
+        println!("Multi-part upload completed successfully!");
+        Ok(())
+    } else {
+        eprintln!(
+            "Failed to complete upload. Status: {}, Body: {}",
+            response.status(),
+            response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Failed to read response body".to_string())
+        );
+        Err(anyhow::anyhow!("Failed to complete multi-part upload"))
+    }
+}
 
 // GET THE PRESIGNED URL FROM THE BACKEND
 pub(crate) async fn get_presigned_url(size_in_bytes: usize) -> Result<PresignedResponse, Error> {

@@ -24,27 +24,40 @@ pub fn Home() -> Element {
         }
         div{
             class:"w-full h-screen flex flex-col md:flex-row",
-            // LEFT OR TOP CONTAINER
-            div{
-                style:"",
-                class:" h-[60%] md:w-[50%] md:h-[100%] bg-[url('/assets/page_grid.svg')]
-                bg-no-repeat md:bg-none bg-blue-50 bg-opacity-0 flex justify-center items-center",
 
+            // MD=LEFT OR MOBILE=TOP
+            div{
+                // style:"background:yellow; margin:0; padding:0;",
+                class:" h-[60%] md:w-[50%] md:h-[100%]
+                bg-no-repeat md:bg-none flex
+                 bg-[url('/assets/page_grid.svg')] bg-no-repeat
+                  bg-[cover,auto_100%]
+                 ",
+                // img {
+                //     class:"w-full md:hidden z-0 ",
+                //     src:"/assets/page_grid.svg"
+                // }
                 div{
-                    style:"",
-                    class:"ml-4 mt-24 md:m-0 md:hidden  w-full h-full flex",
+                    style:" margin:0; padding:0;",
+                    class:"md:m-0 md:hidden  w-full h-full flex
+                     bg-no-repeat bg-[contain,100%_100%]
+                    ",
                     // bg-[url('/assets/geometry.svg')]
                     // bg-no-repeat bg-cover bg-[contain,100%_100%] bg-center
+                    // bg-[url('/assets/page_grid.svg')]
+
 
                     img {
-                        class:"w-full md:hidden  ",
+                        class:"w-full md:hidden z-0 ",
                         src:"/assets/geometry.svg"
                     }
+
                 }
 
 
                 // FLEX FLEX-COL WITH THIRD ONE GROWING - HIDDEN FOR MOBILE SCREENS
                 div{
+                    // style:"background:blue; opacity:0.1;",
                     class:" md:w-full h-full md:flex md:flex-col ",
                     // bg-[length:90%] mt-[100px] md:mt-[0px] md:bg-none flex flex-col",
                     // class:"w-full h-screen flex items-center justify-center md:bg-[url('/assets/geometry.svg')] md:bg-cover md:bg-no-repeat md:bg-center
@@ -127,58 +140,30 @@ pub fn Home() -> Element {
             //------------------------------------
             // RIGHT OR BOTTOM CONTAINER
             div{
-                // style:format!(
-                //         "
-                //          margin:0px;
-                //          padding:0px;
-                //          background:rgba(213,215,217, 0.4);
-                //          background-image: url('/assets/geometry.svg'), url('/assets/page_grid.svg');
-                //          background-size: 81% auto, 100vw 100%;
-                //          background-repeat: no-repeat, no-repeat;
-                //          background-position: center, center;
+                // style:"background:yellow; opacity:0.1;",
 
-
-                //          "
-
-                //     ),
-                // class:" p-[10px] h-[40%]  md:m-0 md:p-0 md:w-[50%] md:h-[100vh] relative aspect-[1/1]",
-                // class: "p-[10px] h-[40%] md:m-0 md:p-0 md:w-[50%] md:h-[100vh] relative aspect-[1/1]
-                //                     md:bg-[url('/assets/geometry.svg'),url('/assets/page_grid.svg')]
-                //                     md:bg-[100%_auto,100%_100%] md:bg-[contain,100%_100%]
-                //                     md:bg-no-repeat md:bg-center",
-                //
-
-
-                        class: "mt-8 h-[40%] md:m-0 md:p-0 md:w-[50%] md:h-[100vh] md:[100%]
-                                md:bg-blue-50 md:bg-opacity-0  bg-[url('/assets/page_grid.svg')] bg-no-repeat bg-[auto_100%] z-0
-                                items-center justify-center flex
-                                ",
-
-                        div{
-                            class:" md:w-full md:h-screen  md:z-1 md:w-[100%] flex items-center justify-center",
-                            // md:bg-[url('/assets/geometry.svg')] md:bg-no-repeat
-                            // md:bg-cover md:bg-[contain,80%_80%] md:bg-center
-
-                            img {
-                                class:"hidden md:block md:w-full ",
-                                src:"/assets/geometry.svg"
-                            }
-                        }
-
-                        // Background for page_grid (it covers the full div)
-                        // div {
-                        //     class: " w-full h-full bg-[url('/assets/page_grid.svg')] bg-[100%_100%] bg-no-repeat bg-center z-0"
-                        // },
-
-                        // // Background for geometry.svg (it stays centered and within the 50% width)
-                        // div {
-                        //     class: " w-[50%] h-full bg-[url('/assets/geometry.svg')] bg-[100%_auto] bg-no-repeat bg-center z-10"
-                        // },
-
-                // RIGHT - HIDDEN FOR MD SCREENS
+                class: "mt-0 h-[40%] md:m-0 md:p-0 md:w-[50%] md:h-[100vh] md:[100%]
+                        md:bg-[url('/assets/page_grid.svg')] md:bg-no-repeat
+                        items-center justify-center flex border-t-[1px] border-[rgb(230,230,235)]
+                        md:border-[0px]
+                        ",
                 div{
-                    style:"margin-left:1rem;",
-                    class:"w-full h-full md:hidden mt-4 md:mt-0",
+                    class:" md:w-full md:h-screen  md:z-1 md:w-[100%] flex items-center justify-center ",
+                    // md:bg-[url('/assets/geometry.svg')] md:bg-no-repeat
+                    // md:bg-cover md:bg-[contain,80%_80%] md:bg-center
+
+                    img {
+                        class:"hidden md:block md:w-full md:z-20",
+                        src:"/assets/geometry.svg"
+                    }
+
+                }
+
+
+                // MOBILE=BOTTOM; MD=HIDDEN
+                div{
+                    style:"margin-left:0.1rem;",
+                    class:"w-full h-full md:hidden mt-4 md:mt-0  ",
                     span{
                     class:"font-helvetica font-thin text-[40px]",
                     "Estimate in minutes "
@@ -195,7 +180,7 @@ pub fn Home() -> Element {
                     }
                     span{
                         class:"text-[18px] ",
-                        class:"font-helvetica font-[200] text-left",
+                        class:"font-helvetica font-[300] text-left ",
                         "Upload your building plans and get a personalised budget delivered straight to your inbox!
                         (We’re in beta!)"
                     }

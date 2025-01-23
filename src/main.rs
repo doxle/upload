@@ -48,6 +48,7 @@ pub struct ThemeContext {
 
 // const MAIN_CSS: Asset = asset!("/assets/main.css");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
+const LOTTIE_DOG: Asset = asset!("/assets/dog.json");
 // const FONT_100: Asset = asset!("/assets/HelveticaNeue-Thin.woff2");
 // const FONT_200: Asset = asset!("/assets/HelveticaNeue-UltraLight.woff2");
 // const FONT_200_ITALIC: Asset = asset!("/assets/HelveticaNeue-UltraLightItalic.woff2");
@@ -99,9 +100,10 @@ fn App() -> Element {
             class: format!(
                 "{} m-0 p-0 h-screen w-full overflow-hidden flex flex-col items-center justify-start {} space-y-10",
                 root_class,
-                bg_class
+                bg_class,
             ),
             document::Link { rel: "stylesheet", href: TAILWIND_CSS }
+            document::Link { rel: "stylesheet", href: LOTTIE_DOG }
             // document::Link { rel: "stylesheet", href: MAIN_CSS }
             // document::Link { rel: "stylesheet", href: FONT_100 }
             // document::Link { rel: "stylesheet", href: FONT_200 }
@@ -109,6 +111,7 @@ fn App() -> Element {
             // document::Link { rel: "stylesheet", href: FONT_300 }
             // document::Link { rel: "stylesheet", href: FONT_700 }
             Router::<Route> {}
+
         }
     }
 }

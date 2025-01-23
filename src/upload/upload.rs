@@ -78,15 +78,15 @@ pub fn Upload() -> Element {
                    if filenames().len() > 0
                    {
                        div {
-                           class:"p-1  flex flex-col items-start justify-center bg--green-100 overflow-y-auto w-full max-h-[60vh]",
+                           class:"p-1  flex flex-col items-start justify-center  overflow-y-auto w-full max-h-[60vh] space-y-3",
                            for filename in filenames.read().iter() {
                             div {
                                 class:"flex flex-row items-center justify-start space-x-2
-                                border-b border-b-[rgba(202,213,244)] leading-[3rem]  h-[3rem] bg-amber-0 ",
-                                img {
-                                    class:"",
-                                    src: "/assets/file.svg",
-                                }
+                                border-b border-b-[rgba(202,213,244)]  ",
+                                // img {
+                                //     class:"",
+                                //     src: "/assets/file.svg",
+                                // }
                                 p{
 
                                     class:"font-helvetica font-[300] text-[14px] ",
@@ -103,7 +103,7 @@ pub fn Upload() -> Element {
                        div {
                            class:"w-full h-full flex flex-col items-center justify-center mt-6",
                            label{
-                                class:"p-3 border border-black font-helvetica font-[200] text-[16px] bg-[rgb(45,45,49)] text-white
+                                class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
                                 hover:bg-blue-700 cursor-pointer
                                 ",
                                 "Browse"
@@ -119,9 +119,7 @@ pub fn Upload() -> Element {
                                             // Asynchronous Handling of file upload
                                             onchange: move |evt| {
                                                 async move {
-
                                                     if let Some(file_engine) = evt.files() {
-
 
                                                         //ITER OVER THE FILES
                                                         for file in file_engine.files() {
@@ -165,7 +163,7 @@ pub fn Upload() -> Element {
 
                             }
                             span{
-                                class:"mt-8 font-helvetica font-[700] text-[14px] italic text-blue-900",
+                                class:"mt-8 font-helvetica font-[300] text-[14px] md:text-[15px] italic text-blue-900",
                                 "Working Drawings, Engineering Plans, Soil Report, Drainage etc"
                             }
                        }
@@ -185,14 +183,14 @@ pub fn Upload() -> Element {
 
                            },
                            class:"p-3 border border-black font-helvetica font-[300] text-[16px]
-                           hover:font-[300] cursor-pointer items-center justify-center
+                           hover:font-[400] cursor-pointer items-center justify-center
                            ",
                            "Undo"
                        }
                        //SUBMIT BUTTON
                        button {
                            onclick:  move |_| {
-                               async move
+                               spawn(async move
                                {
                                         info!("Submit button");
                                         let res = upload_plans(upload_files(), total_file_size()).await;
@@ -211,7 +209,7 @@ pub fn Upload() -> Element {
                                         //     tracing::info!("{:#?}", i);
                                         // }
 
-                                }
+                                });
                            },
                            class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
                            hover:bg-blue-700 cursor-pointer items-center justify-center
