@@ -214,6 +214,8 @@ pub(crate) async fn multi_part_upload(
     Ok(())
 }
 
+//FOR THIS TO WORK IN THE WEB, WE NEED TO INJECT JS AS RUST AND WASM DONT SUPPORT
+// CONCURRENT THREADS
 pub(crate) async fn _concurrent_multi_part_upload(
     upload_id: String,
     zip_file: Vec<u8>,

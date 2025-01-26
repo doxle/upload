@@ -36,6 +36,7 @@ module.exports = {
         // inter: ["Inter", "sans-serif"],
         // montserrat: ["Montserrat", "sans-serif"],
         // lexend: ["Lexend", "sans-serif"],
+        source_code_pro: ["Source Code Pro", "sans-serif"],
 
         helvetica: ['"Helvetica Neue"', "Arial", "sans-serif"],
       },

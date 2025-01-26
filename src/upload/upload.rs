@@ -1,35 +1,37 @@
 use crate::service::service::upload_plans;
 use crate::service::service::UploadFile;
+use crate::user_form::user_form::UserForm;
+use crate::Route;
 use crate::ThemeContext;
 use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
 use round::round;
-// ruse web_sys::window;
 
 #[component]
 pub fn Upload() -> Element {
     // let mut upload_title = use_signal(|| String::from("Upload your plans"));
     let mut upload_files: Signal<Vec<UploadFile>> = use_signal(|| vec![]);
-    let mut filenames: Signal<Vec<String>> = use_signal(|| vec![]);
+    let mut filenames: Signal<Vec<(String, f64)>> = use_signal(|| vec![]);
     let mut total_file_size: Signal<f64> = use_signal(|| 0f64);
     let context = use_context::<ThemeContext>();
     println!("current theme : {:#?}", context.current_theme.read());
+    let formatted_file_size = format!("{:.2}", total_file_size);
 
     rsx! {
         // BACKGROUND DIV
         div{
-            class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4 ",
+            class: "w-full h-screen bg-grid flex flex-col items-center justify-center  ",
 
             // PARENT DIV
             div {
                 // style:"background:yellow;",
-                class:"p-8 flex flex-col w-[90%] h-[80%] md:w-[60%] md:h-[70%] items-center justify-center  ",
+                class:"flex flex-col w-[100%] h-[80%] md:w-[60%] md:h-[70%] items-center justify-center  ",
 
                 //TITLE TEXT
                span{
                    class:"font-helvetica font-[200] text-[36px]",
-                    if filenames.len() <= 0{
+                    if filenames().len() <= 0{
                         "Upload your plans"
                     }
                     else{
@@ -39,15 +41,15 @@ pub fn Upload() -> Element {
 
                //SELECT MULTIPLE PDFS AT ONCE
                span{
-                   class:"mt-0 font-helvetica font-[300] opacity-50 text-[16px] text-center",
+                   class:"mt-0 font-helvetica font-[300]  text-[16px] text-center",
 
-                   if filenames.len() <= 0{
+                   if filenames().len() <= 0{
                        "Select multiple pdfs at once using the shift key"
                    }
                    else{
 
                        span{
-                            class:"font-helvetica font-[400] text-[16px] text-center",
+                            class:"font-helvetica font-[400]  text-[16px] text-center text-blue-600",
                            "{filenames.len()}"
                        }
                        span{
@@ -55,9 +57,10 @@ pub fn Upload() -> Element {
                            " files selected / Total Size: "
                        }
                        span{
-                            class:"font-helvetica font-[400] text-[16px] text-center",
-                           " {total_file_size}"
-                           // "{format!("{:.2}", total_file_size)}"
+                            class:"font-helvetica font-[400] text-[16px] text-center text-blue-600",
+                           // " {total_file_size}"
+                            "{formatted_file_size}"
+
                        }
                        span{
                             class:"font-helvetica font-[300] text-[16px] text-center",
@@ -68,29 +71,35 @@ pub fn Upload() -> Element {
 
                // UPLOAD - LIGHT BLUE RECT DIV
                div{
-                   // style:"margin-horizontal:2rem; background:yellow;",
-                   class:"p-8 w-full flex flex-col flex-1 bg-blue-100 mt-3 bg-opacity-60
+                   // style:" background:green;",
+                   class:"p-1 w-full flex flex-col flex-1 bg-blue-100 mt-3 bg-opacity-60
                    items-start justify-start border-2 border-dotted border-slate-300
-
+                   overflow-y-auto max-h-[70vh]
                    ",
 
                    // IF USER HAS ALREADY SELECTED FILES
                    if filenames().len() > 0
                    {
                        div {
-                           class:"p-1  flex flex-col items-start justify-center  overflow-y-auto w-full max-h-[60vh] space-y-3",
-                           for filename in filenames.read().iter() {
-                            div {
-                                class:"flex flex-row items-center justify-start space-x-2
-                                border-b border-b-[rgba(202,213,244)]  ",
-                                // img {
-                                //     class:"",
-                                //     src: "/assets/file.svg",
-                                // }
-                                p{
+                           class:"m-0 p-0 bg-red-0 flex flex-col items-start justify-center  overflow-y-visible w-full
+                           scroll-smooth border border-red-0
+                           ",
+                           for (index, (name, size)) in filenames.read().iter().enumerate() {
 
+                            div {
+                                class:"flex flex-row items-center justify-start px-2 py-2
+                                 hover:bg-blue-200 border-b-[0.1px] border-b-[rgba(202,213,244)]       ",
+                                img {
+                                    class:"",
+                                    src: "/assets/blue_file.svg",
+                                }
+                                p{
                                     class:"font-helvetica font-[300] text-[14px] ",
-                                    "{filename}"
+                                    "{index+1}) {name}"
+                                }
+                                p{
+                                    class:"font-helvetica font-[300] text-[14px] italic text-blue-500 ",
+                                    "{size} mb"
                                 }
                             }
                         }
@@ -123,17 +132,21 @@ pub fn Upload() -> Element {
 
                                                         //ITER OVER THE FILES
                                                         for file in file_engine.files() {
-                                                            let mut file_size = 0;
+                                                            info!("first filesnames: {}", file);
+                                                            let mut file_size = 0u64;
+                                                            let mut file_size_float=0f64;
                                                             let mut file_data:Vec<u8> = vec![];
                                                             //WRITE TO THE FILNAMES SIGNAL
-                                                            filenames.write().push(file.clone());
+
 
                                                             if let Some(size) = file_engine.file_size(&file).await {
                                                                 file_size = size;
                                                                 let mb = size as f64/1024.0/1024.0;
                                                                 // let rounded_mb = format!("{:.2}", mb);
-                                                                let rounded_mb = round(mb,2);
+                                                                let rounded_mb = round(mb,4);
                                                                 total_file_size += rounded_mb;
+                                                                file_size_float = rounded_mb
+
                                                             }
                                                             else{
                                                                 error!("Error getting file size");
@@ -145,6 +158,8 @@ pub fn Upload() -> Element {
                                                             else{
                                                                 error!("Error reading file");
                                                             }
+
+                                                            filenames.write().push((file.clone(),file_size_float));
 
 
                                                             let uploadFile = UploadFile {
@@ -164,7 +179,7 @@ pub fn Upload() -> Element {
                             }
                             span{
                                 class:"mt-8 font-helvetica font-[300] text-[14px] md:text-[15px] italic text-blue-900",
-                                "Working Drawings, Engineering Plans, Soil Report, Drainage etc"
+                                "Working Drawings, Engineering, Soil Report, Drainage etc"
                             }
                        }
                    }
@@ -197,7 +212,9 @@ pub fn Upload() -> Element {
 
                                         match res {
                                             Ok(_)=>{
+                                                navigator().push(Route::UserForm {  });
                                                 info!("Files have been uploaded to S3..")
+
                                             }
                                             Err(e)=>{
                                                 error!("Error {:?}",e)

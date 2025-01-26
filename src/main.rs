@@ -14,6 +14,8 @@ use legal::legal::Legal;
 mod jot;
 use jot::jot::Jot;
 mod service;
+mod user_form;
+use user_form::user_form::UserForm;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 
@@ -29,6 +31,8 @@ enum Route {
     Upload {},
     #[route("/legal")]
     Legal {},
+    #[route("/user_form")]
+    UserForm {},
 
     #[route("/blog/:id")]
     Blog { id: i32 },

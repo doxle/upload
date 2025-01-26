@@ -124,9 +124,10 @@ pub fn Home() -> Element {
                                 "Upload Plans"
 
                             }
-                            button{
+                            Link{
                                 class:"p-4 border border-[rgb(45,45,49)] font-helvetica font-[300] text-[16px]
                                 hover:font-[400] ",
+                                to: Route:: UserForm  {},
                                 "About Us"
                             }
 
@@ -201,9 +202,10 @@ pub fn Home() -> Element {
                             "Upload Plans"
 
                         }
-                        button{
-                            class:"p-3 border border-[rgb(45,45,49)] font-helvetica font-light text-[16px]
-                            hover:font-[400]",
+                        Link{
+                            class:"p-4 border border-[rgb(45,45,49)] font-helvetica font-[300] text-[16px]
+                            hover:font-[400] ",
+                            to: Route:: UserForm  {},
                             "About Us"
                         }
                     }
