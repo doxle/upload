@@ -3,7 +3,7 @@ mod canvas;
 use canvas::canvas::Canvas;
 mod components {
     pub mod dialog;
-    pub mod pulse_effect;
+    // pub mod pulse_effect;
 }
 // use components::navbar::Navbar;
 mod home;

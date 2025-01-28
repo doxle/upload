@@ -5,6 +5,7 @@
 use anyhow::{Context, Error, Result};
 use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
+use dioxus::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
@@ -120,7 +121,9 @@ pub(crate) async fn multi_part_upload(
     upload_id: String,
     zip_file: Vec<u8>,
     presigned_urls: Vec<String>,
-    progress_callback: impl Fn(usize, usize, f32) + Send + 'static,
+    current_chunk: &mut Signal<usize>,
+    total_chunk: &mut Signal<usize>,
+    percentage: &mut Signal<f32>,
 ) -> Result<(), Error> {
     // let mut etags = vec![];
     info!("Multiple presigned URLs received, starting chunked upload...");
@@ -180,9 +183,11 @@ pub(crate) async fn multi_part_upload(
             // info!("Headers : {:?}", headers);
         }
 
-        let percentage = ((index + 1) as f32 / total_chunks as f32) * 100.0;
+        let per = ((index + 1) as f32 / total_chunks as f32) * 100.0;
         //SEND BACK TO THE CALLING FUNCTION
-        progress_callback(index + 1, total_chunks, percentage);
+        // progress_callback(index + 1, total_chunks, percentage);
+        info!("****percentage*****: {:?}", percentage);
+        percentage.set(per);
 
         // MOVE THE STARTING POINT TO THE CURRENT CHUNK TO START THE NEXT CHUNK
         offset = chunk_end;
