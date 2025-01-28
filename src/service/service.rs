@@ -44,6 +44,9 @@ pub struct PresignedResponse {
 pub(crate) async fn upload_plans(
     upload_files: Vec<UploadFile>,
     total_file_size: f64,
+    current_chunk_signal: &mut Signal<usize>,
+    total_chunk_signal: &mut Signal<usize>,
+    percentage_signal: &mut Signal<f32>,
 ) -> Result<(), Error> {
     // info!(
     //     "Beginning Upload Plans: {:?} {}",
@@ -64,19 +67,28 @@ pub(crate) async fn upload_plans(
 
     let presigned_urls = presigned_response.urls;
 
-    // if presigned_urls.len() == 1 {
-    single_part_upload(zipped_file, presigned_urls).await
-    // }
-    // else {
-    //     //UPLOAD ID IS ONLY PRESENT FOR MULTI-PART UPLOAD FROM BE
-    //     let upload_id = presigned_response.upload_id;
-    //     match upload_id {
-    //         None => Err(anyhow::anyhow!(
-    //             "No upload ID returned for multipart upload"
-    //         )),
-    //         Some(upload_id) => multi_part_upload(upload_id, zipped_file, presigned_urls).await,
-    //     }
-    // }
+    if presigned_urls.len() == 1 {
+        single_part_upload(zipped_file, presigned_urls).await
+    } else {
+        //UPLOAD ID IS ONLY PRESENT FOR MULTI-PART UPLOAD FROM BE
+        let upload_id = presigned_response.upload_id;
+        match upload_id {
+            None => Err(anyhow::anyhow!(
+                "No upload ID returned for multipart upload"
+            )),
+            Some(upload_id) => {
+                multi_part_upload(
+                    upload_id,
+                    zipped_file,
+                    presigned_urls,
+                    current_chunk_signal,
+                    total_chunk_signal,
+                    percentage_signal,
+                )
+                .await
+            }
+        }
+    }
 }
 
 //SINGLE FILE UPLOAD
@@ -121,9 +133,9 @@ pub(crate) async fn multi_part_upload(
     upload_id: String,
     zip_file: Vec<u8>,
     presigned_urls: Vec<String>,
-    current_chunk: &mut Signal<usize>,
-    total_chunk: &mut Signal<usize>,
-    percentage: &mut Signal<f32>,
+    current_chunk_signal: &mut Signal<usize>,
+    total_chunk_signal: &mut Signal<usize>,
+    percentage_signal: &mut Signal<f32>,
 ) -> Result<(), Error> {
     // let mut etags = vec![];
     info!("Multiple presigned URLs received, starting chunked upload...");
@@ -183,11 +195,17 @@ pub(crate) async fn multi_part_upload(
             // info!("Headers : {:?}", headers);
         }
 
-        let per = ((index + 1) as f32 / total_chunks as f32) * 100.0;
+        let percent = ((index + 1) as f32 / total_chunks as f32) * 100.0;
         //SEND BACK TO THE CALLING FUNCTION
         // progress_callback(index + 1, total_chunks, percentage);
-        info!("****percentage*****: {:?}", percentage);
-        percentage.set(per);
+        info!("{}", "-".repeat(45));
+        percentage_signal.set(percent);
+        info!("percent:{percent}");
+        current_chunk_signal.set(index);
+        info!("current_chunk:{index}");
+        total_chunk_signal.set(total_chunks);
+        info!("total_chunk:{total_chunks}");
+        info!("{}", "-".repeat(45));
 
         // MOVE THE STARTING POINT TO THE CURRENT CHUNK TO START THE NEXT CHUNK
         offset = chunk_end;

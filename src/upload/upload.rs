@@ -1,8 +1,10 @@
 use crate::service::service::get_presigned_url;
 use crate::service::service::multi_part_upload;
 use crate::service::service::single_part_upload;
+use crate::service::service::upload_plans;
 use crate::service::service::zip_files_in_memory;
 use crate::service::service::UploadFile;
+use crate::Route;
 use crate::ThemeContext;
 use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
@@ -25,93 +27,93 @@ pub fn Upload() -> Element {
     let context = use_context::<ThemeContext>();
     println!("current theme : {:#?}", context.current_theme.read());
     let formatted_file_size = format!("{:.2}", total_file_size);
-    let mut progress = use_signal(|| 0.0f32);
+    let mut percentage = use_signal(|| 0.0f32);
     let mut current_chunk = use_signal(|| 0usize);
     let mut total_chunk = use_signal(|| 0usize);
 
-    let upload_resource = use_resource(move || {
-        async move {
-            //THIS RESOURCE WILL RUN ONLY AFTER THE SUBMIT BUTTON IS PRESSED
-            if submitting() {
-                match zip_files_in_memory(upload_files(), total_file_size()) {
-                    Ok((zip_file, zip_size)) => {
-                        info!("Zipping completed successfully!");
-                        info!("Total zipped size: {}", zip_size);
-                        // --------------------zipping------------------------------------
+    // let upload_resource = use_resource(move || {
+    //     async move {
+    //         //THIS RESOURCE WILL RUN ONLY AFTER THE SUBMIT BUTTON IS PRESSED
+    //         if submitting() {
+    //             match zip_files_in_memory(upload_files(), total_file_size()) {
+    //                 Ok((zip_file, zip_size)) => {
+    //                     info!("Zipping completed successfully!");
+    //                     info!("Total zipped size: {}", zip_size);
+    //                     // --------------------zipping------------------------------------
 
-                        info!("Step 2 -Presigning...");
-                        match get_presigned_url(zip_size).await {
-                            Ok(presigned) => {
-                                // ---------------------presigned-----------------------------------
-                                // Step 3: Uploading Files
-                                // SINGLE PART
-                                if presigned.urls.len() == 1 {
-                                    // Single-part upload
-                                    if let Err(e) =
-                                        single_part_upload(zip_file.clone(), presigned.urls.clone())
-                                            .await
-                                    {
-                                        error!("Failed during single-part upload: {:?}", e);
-                                        progress.set(-1.0);
-                                    }
-                                    //MULTI PART
-                                } else {
-                                    match presigned.upload_id {
-                                        Some(upload_id) => {
-                                            match multi_part_upload(
-                                                upload_id,
-                                                zip_file.clone(),
-                                                presigned.urls,
-                                                &mut current_chunk,
-                                                &mut total_chunk,
-                                                &mut progress,
-                                                // |current, total, percent| {
-                                                //     // dioxus::prelude::spawn(async move {
-                                                //     //     current_chunk.set(current);
-                                                //     //     total_chunks.set(total);
-                                                //     //     progress.set(percent);
-                                                //     // });
-                                                //     current_chunk.set(current);
-                                                //     total_chunks.set(total);
-                                                //     progress.set(percent);
-                                                // },
-                                            )
-                                            .await
-                                            {
-                                                Ok(_) => {}
-                                                Err(e) => {
-                                                    error!(
-                                                        "Failed during multi-part upload: {:?}",
-                                                        e
-                                                    );
-                                                    progress.set(-5.0);
-                                                }
-                                            }
-                                        }
-                                        None => {
-                                            error!("No upload ID returned for multipart upload");
-                                            progress.set(-2.0);
-                                        }
-                                    }
-                                }
-                            }
-                            Err(e) => {
-                                error!("Failed to get presigned URL: {:?}", e);
-                                progress.set(-3.0); // Indicate error in progress
-                            }
-                        };
-                    }
-                    Err(e) => {
-                        error!("Failed to zip files: {:?}", e);
-                        progress.set(-4.0); // Indicate error in progress
-                    }
-                }
-                Some(())
-            } else {
-                None
-            }
-        }
-    });
+    //                     info!("Step 2 -Presigning...");
+    //                     match get_presigned_url(zip_size).await {
+    //                         Ok(presigned) => {
+    //                             // ---------------------presigned-----------------------------------
+    //                             // Step 3: Uploading Files
+    //                             // SINGLE PART
+    //                             if presigned.urls.len() == 1 {
+    //                                 // Single-part upload
+    //                                 if let Err(e) =
+    //                                     single_part_upload(zip_file.clone(), presigned.urls.clone())
+    //                                         .await
+    //                                 {
+    //                                     error!("Failed during single-part upload: {:?}", e);
+    //                                     progress.set(-1.0);
+    //                                 }
+    //                                 //MULTI PART
+    //                             } else {
+    //                                 match presigned.upload_id {
+    //                                     Some(upload_id) => {
+    //                                         match multi_part_upload(
+    //                                             upload_id,
+    //                                             zip_file.clone(),
+    //                                             presigned.urls,
+    //                                             &mut current_chunk,
+    //                                             &mut total_chunk,
+    //                                             &mut progress,
+    //                                             // |current, total, percent| {
+    //                                             //     // dioxus::prelude::spawn(async move {
+    //                                             //     //     current_chunk.set(current);
+    //                                             //     //     total_chunks.set(total);
+    //                                             //     //     progress.set(percent);
+    //                                             //     // });
+    //                                             //     current_chunk.set(current);
+    //                                             //     total_chunks.set(total);
+    //                                             //     progress.set(percent);
+    //                                             // },
+    //                                         )
+    //                                         .await
+    //                                         {
+    //                                             Ok(_) => {}
+    //                                             Err(e) => {
+    //                                                 error!(
+    //                                                     "Failed during multi-part upload: {:?}",
+    //                                                     e
+    //                                                 );
+    //                                                 progress.set(-5.0);
+    //                                             }
+    //                                         }
+    //                                     }
+    //                                     None => {
+    //                                         error!("No upload ID returned for multipart upload");
+    //                                         progress.set(-2.0);
+    //                                     }
+    //                                 }
+    //                             }
+    //                         }
+    //                         Err(e) => {
+    //                             error!("Failed to get presigned URL: {:?}", e);
+    //                             progress.set(-3.0); // Indicate error in progress
+    //                         }
+    //                     };
+    //                 }
+    //                 Err(e) => {
+    //                     error!("Failed to zip files: {:?}", e);
+    //                     progress.set(-4.0); // Indicate error in progress
+    //                 }
+    //             }
+    //             Some(())
+    //         } else {
+    //             None
+    //         }
+    //     }
+    // });
 
     //BROWSING FILES NOT SUBMITTED
     if !submitting() {
@@ -306,33 +308,26 @@ pub fn Upload() -> Element {
                                 }
                                 //SUBMIT BUTTON
                                 button {
-                                    onclick:  move |_| {
-
-                                       //START THE CO ROUTINE
-                                        // start_upload.send(());
-
-                                        //CHANGE UI TO PRELOADER
+                                    onclick:  move |_| async move{
                                         *submitting.write() = true;
-                                        // spawn(async move
-                                        // {
+                                        let res = upload_plans(
+                                                upload_files(),
+                                                total_file_size(),
+                                                &mut current_chunk,
+                                                &mut total_chunk,
+                                                &mut percentage
+                                            ).await;
 
+                                        match res {
+                                            Ok(_)=>{
+                                                navigator().push(Route::UserForm {  });
+                                                info!("Files have been uploaded to S3..")
 
-                                            // let res = upload_plans(upload_files(), total_file_size()).await;
-
-                                            //     match res {
-                                            //         Ok(_)=>{
-                                            //             navigator().push(Route::UserForm {  });
-                                            //             info!("Files have been uploaded to S3..")
-
-                                            //         }
-                                            //         Err(e)=>{
-                                            //             error!("Error {:?}",e)
-                                            //         }
-                                            //     }
-
-
-
-                                            // }); // spawn
+                                            }
+                                            Err(e)=>{
+                                                error!("Error {:?}",e)
+                                            }
+                                        }
                                     },
                                     class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
                                     hover:bg-blue-700 cursor-pointer items-center justify-center
@@ -359,50 +354,28 @@ pub fn Upload() -> Element {
     }
     //SUBMIT BUTTON IS PRESSED
     else {
-        match &*upload_resource.read_unchecked() {
-            Some(res) => rsx! {
-
-                div {
-                    class: "w-full h-screen flex flex-col justify-center items-center",
-                    span {
-                        class: "font-helvetica font-[200] text-[30px] text-center text-green-500",
-                        "Upload completed successfully! {res:?}"
-                    }
-                }
-            },
-
-            // Some(Err(e)) => rsx! {
-            //     div {
-            //                class: "w-full h-screen flex flex-col justify-center items-center relative space-y-1",
-            //                span {
-            //                    class: "font-helvetica font-[200] text-[30px] bg-red-100 text-center",
-            //                    "Uploading failed: {e:?}"
-            //                }
-            //            }
-            // },
-            None => rsx! {
+        rsx! {
+            div{
+                class:"w-full h-screen flex flex-col justify-center items-center relative space-y-1",
                 div{
-                    class:"w-full h-screen flex flex-col justify-center items-center relative space-y-1",
-                    div{
-                        class:"w-40 h-40 bg-blue-500 rounded-full animate-pulse"
-                    }
-                    span{
-                        class:"font-helvetica font-[200] text-[30px] bg-red-100 text-center",
-                        "Uploading ..."
-                    }
+                    class:"w-40 h-40 bg-blue-500 rounded-full animate-pulse"
+                }
+                span{
+                    class:"font-helvetica font-[200] text-[30px] bg-slate-50 text-center",
+                    "Uploading"
+                }
+                div {
+                    class: "mt-4 text-center font-helvetica font-[200]",
+                    h2 { "Progress: {percentage:.2}% ({current_chunk} / {total_chunk})" }
                     div {
-                        class: "mt-4 text-center",
-                        h2 { "Progress: {progress:.2}% ({current_chunk} / {total_chunk})" }
+                        class: "w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-2",
                         div {
-                            class: "w-full h-2 bg-gray-300 rounded-full overflow-hidden mt-2",
-                            div {
-                                class: "h-full bg-blue-500",
-                                style: "width: {progress}%;"
-                            }
+                            class: "h-full bg-blue-500 font-helvetica font-[200]",
+                            style: "width: {percentage}%;"
                         }
                     }
                 }
-            },
+            }
         }
     }
 }
