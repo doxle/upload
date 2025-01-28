@@ -1,22 +1,64 @@
-use dioxus::logger::tracing::error;
+// use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
 
 #[component]
 pub fn UserForm() -> Element {
+    // pub fn UserForm() -> Element {
+    // let upload_context = use_context::<UploadContext>();
+    // let upload_files = upload_context.upload_files;
+
+    // info!("User_form : {:?}, {}", upload_files, total_file_size);
+    // let upload_files_future = use_resource(move || {
+    //     let upload_files = upload_files.clone();
+    //     async move {
+    //         info!("Checking file size again: {}", total_file_size);
+    //         upload_plans(upload_files, total_file_size).await
+    //     }
+    // });
+
     rsx! {
-       div{
-           // class:"w-full h-screen bg-grid bg-[size:sm] md:bg-[size:md] lg:bg-[size:lg]",
-           class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
-           span{
-               class:"font-helvetica font-[200] text-[45px]",
-               "Your details"
-           }
-           FormInput{}
-       }
+        div{
+             class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
+             span{
+                        class:"font-helvetica font-[200] text-[45px]",
+                        " Your details"
+             },
+             FormInput{}
+        }
     }
+    // match &*upload_files_future.read_unchecked() {
+    // Some(Ok(response)) => rsx! {
+    //    div{
+    //        // class:"w-full h-screen bg-grid bg-[size:sm] md:bg-[size:md] lg:bg-[size:lg]",
+    //        class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
+    //        span{
+    //            class:"font-helvetica font-[200] text-[45px]",
+    //            " Your details {response :?}"
+    //        }
+    //        FormInput{}
+    //    }
+    // },
+    // Some(Err(_)) => rsx! {
+    //     div{
+    //          class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
+    //          span{
+    //              class:"font-helvetica font-[200] text-[45px] text-red-500",
+    //              "Error!"
+    //          }
+    //     }
+    // },
+    // None => rsx! { div{
+    //      class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
+    //      // PulseEffect{}
+    //      span{
+    //          class:"font-helvetica font-[200] text-[45px] text-blue-400",
+    //          "Loading ..."
+    //      }
+    // }},
 }
 
+//-USER FORM TO VERIFY USER EMAIL
 #[component]
 pub fn FormInput() -> Element {
     rsx! {

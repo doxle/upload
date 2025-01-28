@@ -3,6 +3,7 @@ mod canvas;
 use canvas::canvas::Canvas;
 mod components {
     pub mod dialog;
+    pub mod pulse_effect;
 }
 // use components::navbar::Navbar;
 mod home;
@@ -33,7 +34,6 @@ enum Route {
     Legal {},
     #[route("/user_form")]
     UserForm {},
-
     #[route("/blog/:id")]
     Blog { id: i32 },
 }

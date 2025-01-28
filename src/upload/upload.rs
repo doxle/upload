@@ -1,12 +1,21 @@
-use crate::service::service::upload_plans;
+use crate::service::service::get_presigned_url;
+use crate::service::service::multi_part_upload;
+use crate::service::service::single_part_upload;
+use crate::service::service::zip_files_in_memory;
 use crate::service::service::UploadFile;
-use crate::user_form::user_form::UserForm;
-use crate::Route;
 use crate::ThemeContext;
 use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
+use futures::StreamExt;
 use round::round;
+use tokio::spawn;
+
+// #[derive(Clone, Copy)]
+// pub struct UploadContext {
+//     pub upload_files: Signal<Vec<UploadFile>>,
+//     pub total_file_size: Signal<f64>,
+// }
 
 #[component]
 pub fn Upload() -> Element {
@@ -14,228 +23,362 @@ pub fn Upload() -> Element {
     let mut upload_files: Signal<Vec<UploadFile>> = use_signal(|| vec![]);
     let mut filenames: Signal<Vec<(String, f64)>> = use_signal(|| vec![]);
     let mut total_file_size: Signal<f64> = use_signal(|| 0f64);
+    let mut submitting = use_signal(|| false);
     let context = use_context::<ThemeContext>();
     println!("current theme : {:#?}", context.current_theme.read());
     let formatted_file_size = format!("{:.2}", total_file_size);
+    let progress = use_signal(|| 0.0f32);
+    let current_chunk = use_signal(|| 0usize);
+    let total_chunks = use_signal(|| 0usize);
 
-    rsx! {
-        // BACKGROUND DIV
-        div{
-            class: "w-full h-screen bg-grid flex flex-col items-center justify-center  ",
+    let start_upload = use_coroutine(|mut rx| {
+        to_owned![progress, current_chunk, total_chunks];
+        async move {
+            while let Some(msg) = rx.next().await {
+                info!("Step 1 -Zipping Files...");
+                let (zipped_file, zip_size) =
+                    match zip_files_in_memory(upload_files(), total_file_size()) {
+                        Ok(result) => result,
+                        Err(e) => {
+                            error!("Failed to zip files: {:?}", e);
+                            progress.set(-1.0); // Indicate error in progress
+                            continue;
+                        }
+                    };
+                info!("Zipping completed successfully!");
+                info!("Total zipped size: {}", zip_size);
 
-            // PARENT DIV
-            div {
-                // style:"background:yellow;",
-                class:"flex flex-col w-[100%] h-[80%] md:w-[60%] md:h-[70%] items-center justify-center  ",
+                progress.set(0.0);
+                total_chunks.set(zip_size);
+                current_chunk.set(0);
 
-                //TITLE TEXT
-               span{
-                   class:"font-helvetica font-[200] text-[36px]",
-                    if filenames().len() <= 0{
-                        "Upload your plans"
+                // --------------------zipping------------------------------------
+                info!("Step 2 -Presigning...");
+                let presigned = match get_presigned_url(zip_size).await {
+                    Ok(presigned) => presigned,
+                    Err(e) => {
+                        error!("Failed to get presigned URL: {:?}", e);
+                        progress.set(-1.0); // Indicate error in progress
+                        continue; // Skip to the next loop iteration
                     }
-                    else{
-                        "Submitting your plans"
+                };
+                // ---------------------presigned-----------------------------------
+                // Step 3: Uploading Files
+                // SINGLE PART
+                if presigned.urls.len() == 1 {
+                    // Single-part upload
+                    if let Err(e) = single_part_upload(zipped_file.clone(), presigned.urls).await {
+                        error!("Failed during single-part upload: {:?}", e);
+                        progress.set(-1.0);
                     }
-               }
+                }
+                //MULTI PART
+                else {
+                    // Multi-part upload
+                    let upload_id = match presigned.upload_id {
+                        Some(id) => id,
+                        None => {
+                            error!("No upload ID returned for multipart upload");
+                            progress.set(-1.0);
+                            continue; // Skip to the next loop iteration
+                        }
+                    };
 
-               //SELECT MULTIPLE PDFS AT ONCE
-               span{
-                   class:"mt-0 font-helvetica font-[300]  text-[16px] text-center",
+                    dioxus::prelude::spawn({
+                        to_owned![progress, current_chunk, total_chunks];
+                        async move {
+                            if let Err(e) = multi_part_upload(
+                                upload_id,
+                                zipped_file.clone(),
+                                presigned.urls,
+                                |current, total, percent| {
+                                    dioxus::prelude::spawn(async move {
+                                        current_chunk.set(current);
+                                        total_chunks.set(total);
+                                        progress.set(percent);
+                                    });
+                                },
+                            )
+                            .await
+                            {
+                                error!("Failed during multi-part upload: {:?}", e);
+                                dioxus::prelude::spawn(async move {
+                                    progress.set(-1.0); // Indicate error
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    });
 
-                   if filenames().len() <= 0{
-                       "Select multiple pdfs at once using the shift key"
-                   }
-                   else{
+    if !submitting() {
+        rsx! {
+            // BACKGROUND DIV
+            div{
+                class: "w-full h-screen bg-grid flex flex-col items-center justify-center  ",
 
-                       span{
-                            class:"font-helvetica font-[400]  text-[16px] text-center text-blue-600",
-                           "{filenames.len()}"
-                       }
-                       span{
-                            class:"font-helvetica font-[300] text-[16px] text-center",
-                           " files selected / Total Size: "
-                       }
-                       span{
-                            class:"font-helvetica font-[400] text-[16px] text-center text-blue-600",
-                           // " {total_file_size}"
-                            "{formatted_file_size}"
+                // UPLOAD DIV
+                div {
+                    // style:"background:yellow;",
+                    class:"flex flex-col w-[100%] h-[80%] md:w-[60%] md:h-[70%] items-center justify-center  ",
 
-                       }
-                       span{
-                            class:"font-helvetica font-[300] text-[16px] text-center",
-                           " MB"
-                       }
-                   }
-               }
-
-               // UPLOAD - LIGHT BLUE RECT DIV
-               div{
-                   // style:" background:green;",
-                   class:"p-1 w-full flex flex-col flex-1 bg-blue-100 mt-3 bg-opacity-60
-                   items-start justify-start border-2 border-dotted border-slate-300
-                   overflow-y-auto max-h-[70vh]
-                   ",
-
-                   // IF USER HAS ALREADY SELECTED FILES
-                   if filenames().len() > 0
-                   {
-                       div {
-                           class:"m-0 p-0 bg-red-0 flex flex-col items-start justify-center  overflow-y-visible w-full
-                           scroll-smooth border border-red-0
-                           ",
-                           for (index, (name, size)) in filenames.read().iter().enumerate() {
-
-                            div {
-                                class:"flex flex-row items-center justify-start px-2 py-2
-                                 hover:bg-blue-200 border-b-[0.1px] border-b-[rgba(202,213,244)]       ",
-                                img {
-                                    class:"",
-                                    src: "/assets/blue_file.svg",
+                        //TITLE TEXT
+                        span{
+                            class:"font-helvetica font-[200] text-[36px]",
+                                if filenames().len() <= 0{
+                                    "Upload your plans"
                                 }
-                                p{
-                                    class:"font-helvetica font-[300] text-[14px] ",
-                                    "{index+1}) {name}"
+                                else{
+                                    "Submitting your plans"
                                 }
-                                p{
-                                    class:"font-helvetica font-[300] text-[14px] italic text-blue-500 ",
-                                    "{size} mb"
+                        }
+
+                        //SELECT MULTIPLE PDFS AT ONCE
+                        span{
+                            class:"mt-0 font-helvetica font-[300]  text-[16px] text-center",
+
+                            if filenames().len() <= 0{
+                                "Select multiple pdfs at once using the shift key"
+                            }
+                            else{
+
+                                span{
+                                        class:"font-helvetica font-[400]  text-[16px] text-center text-blue-600",
+                                    "{filenames.len()}"
+                                }
+                                span{
+                                        class:"font-helvetica font-[300] text-[16px] text-center",
+                                    " files selected / Total Size: "
+                                }
+                                span{
+                                        class:"font-helvetica font-[400] text-[16px] text-center text-blue-600",
+                                    // " {total_file_size}"
+                                        "{formatted_file_size}"
+
+                                }
+                                span{
+                                        class:"font-helvetica font-[300] text-[16px] text-center",
+                                    " MB"
                                 }
                             }
                         }
-                       }
 
-                       }
+                        // UPLOAD - LIGHT BLUE RECT DIV
+                        div{
+                            // style:" background:green;",
+                            class:"p-1 w-full flex flex-col flex-1 bg-blue-100 mt-3 bg-opacity-60
+                            items-start justify-start border-2 border-dotted border-slate-300
+                            overflow-y-auto max-h-[70vh]
+                            ",
 
-                    // NO FILES HAVE BEEN SELECTED -BROWSE BUTTON
-                   else{
-                       div {
-                           class:"w-full h-full flex flex-col items-center justify-center mt-6",
-                           label{
-                                class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
-                                hover:bg-blue-700 cursor-pointer
-                                ",
-                                "Browse"
-                                // HIDDEN FILE INPUT
-                                    input {
-                                            class:"hidden",
-                                            id: "file-input",
-                                            // class: "hidden",
-                                            r#type: "file",
-                                            accept: ".pdf",
-                                            multiple: true,
+                            // DISPLAY THE FILES
+                            if filenames().len() > 0
+                            {
+                                div {
+                                    class:"m-0 p-0 bg-red-0 flex flex-col items-start justify-center  overflow-y-visible w-full
+                                    scroll-smooth border border-red-0
+                                    ",
+                                    for (index, (name, size)) in filenames.read().iter().enumerate() {
+                                            // let formatted_size = format!("{:.2}", size); // Pre
 
-                                            // Asynchronous Handling of file upload
-                                            onchange: move |evt| {
-                                                async move {
-                                                    if let Some(file_engine) = evt.files() {
+                                        div {
+                                            class:"flex flex-row items-center justify-start space-x-2 py-2
+                                            hover:bg-blue-200 border-b-[0.1px] border-b-[rgba(202,213,244)]       ",
+                                            img {
+                                                class:"",
+                                                src: "/assets/blue_file.svg",
+                                            }
+                                            p{
+                                                class:"font-helvetica font-[300] text-[16px] ",
+                                                "{index+1}) {name}"
+                                            }
+                                            p{
+                                                class:"font-helvetica font-[300] text-[15px] italic text-blue-500 ",
+                                                "{size:.2} MB"
+                                            }
+                                        }
+                                    }
+                                }
 
-                                                        //ITER OVER THE FILES
-                                                        for file in file_engine.files() {
-                                                            info!("first filesnames: {}", file);
-                                                            let mut file_size = 0u64;
-                                                            let mut file_size_float=0f64;
-                                                            let mut file_data:Vec<u8> = vec![];
-                                                            //WRITE TO THE FILNAMES SIGNAL
+                                }
+
+                                // NO FILES HAVE BEEN SELECTED -BROWSE BUTTON
+                            // OR BROWSE THE FILES
+                            else{
+                                div {
+                                    class:"w-full h-full flex flex-col items-center justify-center mt-6",
+                                    label{
+                                            class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
+                                            hover:bg-blue-700 cursor-pointer
+                                            ",
+                                            "Browse"
+                                            // HIDDEN FILE INPUT
+                                                input {
+                                                        class:"hidden",
+                                                        id: "file-input",
+                                                        // class: "hidden",
+                                                        r#type: "file",
+                                                        accept: ".pdf",
+                                                        multiple: true,
+
+                                                        // Asynchronous Handling of file upload
+                                                        onchange: move |evt| {
+                                                            async move {
+                                                                if let Some(file_engine) = evt.files() {
+
+                                                                    //ITER OVER THE FILES
+                                                                    for file in file_engine.files() {
+                                                                        info!("first filesnames: {}", file);
+                                                                        let mut file_size = 0u64;
+                                                                        let mut file_size_float=0f64;
+                                                                        let mut file_data:Vec<u8> = vec![];
+                                                                        //WRITE TO THE FILNAMES SIGNAL
 
 
-                                                            if let Some(size) = file_engine.file_size(&file).await {
-                                                                file_size = size;
-                                                                let mb = size as f64/1024.0/1024.0;
-                                                                // let rounded_mb = format!("{:.2}", mb);
-                                                                let rounded_mb = round(mb,4);
-                                                                total_file_size += rounded_mb;
-                                                                file_size_float = rounded_mb
+                                                                        if let Some(size) = file_engine.file_size(&file).await {
+                                                                            file_size = size;
+                                                                            let mb = size as f64/1024.0/1024.0;
+                                                                            // let rounded_mb = format!("{:.2}", mb);
+                                                                            let rounded_mb = round(mb,4);
+                                                                            total_file_size += rounded_mb;
+                                                                            file_size_float = rounded_mb
 
+                                                                        }
+                                                                        else{
+                                                                            error!("Error getting file size");
+                                                                        }
+
+                                                                        if let Some(contents) = file_engine.read_file(&file).await {
+                                                                            file_data.extend(contents);
+                                                                        }
+                                                                        else{
+                                                                            error!("Error reading file");
+                                                                        }
+
+                                                                        filenames.write().push((file.clone(),file_size_float));
+
+
+                                                                        let uploadFile = UploadFile {
+                                                                            file_name: file,
+                                                                            file_size: file_size,
+                                                                            file_contents: file_data.clone(),
+                                                                        };
+
+                                                                        upload_files.write().push(uploadFile);
+                                                                    }
+                                                                }
                                                             }
-                                                            else{
-                                                                error!("Error getting file size");
-                                                            }
-
-                                                            if let Some(contents) = file_engine.read_file(&file).await {
-                                                                file_data.extend(contents);
-                                                            }
-                                                            else{
-                                                                error!("Error reading file");
-                                                            }
-
-                                                            filenames.write().push((file.clone(),file_size_float));
-
-
-                                                            let uploadFile = UploadFile {
-                                                                file_name: file,
-                                                                file_size: file_size,
-                                                                file_contents: file_data.clone(),
-                                                            };
-
-                                                            upload_files.write().push(uploadFile);
                                                         }
                                                     }
-                                                }
-                                            }
+
+
                                         }
-
-
-                            }
-                            span{
-                                class:"mt-8 font-helvetica font-[300] text-[14px] md:text-[15px] italic text-blue-900",
-                                "Working Drawings, Engineering, Soil Report, Drainage etc"
-                            }
-                       }
-                   }
-               }
-
-               // SHOW THE BOTTOM BUTTONS OF UNDO AND SUBMIT
-               if filenames().len() > 0 {
-                   div {
-                       class:"flex flex-row items-center justify-center mt-6 space-x-2",
-                       button {
-                           onclick: move |_| {
-                               //RESET
-                               upload_files.write().clear();
-                               filenames.write().clear();
-                               total_file_size.set(0.0);
-
-                           },
-                           class:"p-3 border border-black font-helvetica font-[300] text-[16px]
-                           hover:font-[400] cursor-pointer items-center justify-center
-                           ",
-                           "Undo"
-                       }
-                       //SUBMIT BUTTON
-                       button {
-                           onclick:  move |_| {
-                               spawn(async move
-                               {
-                                        info!("Submit button");
-                                        let res = upload_plans(upload_files(), total_file_size()).await;
-
-                                        match res {
-                                            Ok(_)=>{
-                                                navigator().push(Route::UserForm {  });
-                                                info!("Files have been uploaded to S3..")
-
-                                            }
-                                            Err(e)=>{
-                                                error!("Error {:?}",e)
-                                            }
+                                        span{
+                                            class:"mt-8 font-helvetica font-[300] text-[14px] md:text-[15px] italic text-blue-900",
+                                            "Working Drawings, Engineering, Soil Report, Drainage etc"
                                         }
+                                }
+                            }
+                        }
 
-                                        // for i in upload_files.read().iter() {
-                                        //     tracing::warn!("checking before passing");
-                                        //     tracing::info!("{:#?}", i);
-                                        // }
+                        // BOTTOM BUTTONS OF UNDO AND SUBMIT
+                        if filenames().len() > 0 {
+                            div {
+                                class:"flex flex-row items-center justify-center mt-6 space-x-2",
+                                //RESET BUTTON
+                                button {
+                                    onclick: move |_| {
+                                        //RESET
+                                        upload_files.write().clear();
+                                        filenames.write().clear();
+                                        total_file_size.set(0.0);
 
-                                });
-                           },
-                           class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
-                           hover:bg-blue-700 cursor-pointer items-center justify-center
-                           ",
-                           "Submit"
-                       }
-                   }
-               }
 
+
+                                    },
+                                    class:"p-3 border border-black font-helvetica font-[300] text-[16px]
+                                    hover:font-[400] cursor-pointer items-center justify-center
+                                    ",
+                                    "Undo"
+                                }
+                                //SUBMIT BUTTON
+                                button {
+                                    onclick:  move |_| {
+
+                                       //START THE CO ROUTINE
+                                        start_upload.send(());
+
+                                        //CHANGE UI TO PRELOADER
+                                        *submitting.write() = true;
+                                        // spawn(async move
+                                        // {
+
+
+                                            // let res = upload_plans(upload_files(), total_file_size()).await;
+
+                                            //     match res {
+                                            //         Ok(_)=>{
+                                            //             navigator().push(Route::UserForm {  });
+                                            //             info!("Files have been uploaded to S3..")
+
+                                            //         }
+                                            //         Err(e)=>{
+                                            //             error!("Error {:?}",e)
+                                            //         }
+                                            //     }
+
+
+
+                                            // }); // spawn
+                                    },
+                                    class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
+                                    hover:bg-blue-700 cursor-pointer items-center justify-center
+                                    ",
+                                    "Submit"
+                                }
+
+
+
+                                //SUBMIT LINK
+                                // Link {
+                                //     class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
+                                //     hover:bg-blue-700 cursor-pointer items-center justify-center
+                                //     ",
+                                //     to: Route::UserForm { upload_files: upload_files().clone(), total_file_size: total_file_size().clone() },
+                                //     "Submit"
+                                // }
+                            }
+                        }
+
+                }
+            }
+        }
+    }
+    //SUBMIT BUTTON IS PRESSED
+    else {
+        rsx! {
+            div{
+                class:"w-full h-screen flex flex-col justify-center items-center relative space-y-1",
+                div{
+                    class:"w-40 h-40 bg-blue-500 rounded-full animate-pulse"
+                }
+                span{
+                    class:"font-helvetica font-[200] text-[30px] bg-red-100 text-center",
+                    "Uploading ..."
+                }
+                div {
+                    class: "mt-4 text-center",
+                    h2 { "Progress: {progress:.2}% ({current_chunk} / {total_chunks})" }
+                    div {
+                        class: "w-full h-2 bg-gray-300 rounded-full overflow-hidden mt-2",
+                        div {
+                            class: "h-full bg-blue-500",
+                            style: "width: {progress}%;"
+                        }
+                    }
+                }
             }
         }
     }

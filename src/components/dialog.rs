@@ -1,7 +1,5 @@
 use dioxus::prelude::*;
 
-use crate::Route;
-
 #[component]
 pub fn Dialog(show: Signal<bool>, message: Signal<String>) -> Element {
     rsx! {
