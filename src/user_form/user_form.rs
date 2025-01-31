@@ -1,73 +1,60 @@
-// use dioxus::logger::tracing::error;
-use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
+use regex::Regex;
+
+use crate::Route;
 
 #[component]
 pub fn UserForm() -> Element {
-    // pub fn UserForm() -> Element {
-    // let upload_context = use_context::<UploadContext>();
-    // let upload_files = upload_context.upload_files;
-
-    // info!("User_form : {:?}, {}", upload_files, total_file_size);
-    // let upload_files_future = use_resource(move || {
-    //     let upload_files = upload_files.clone();
-    //     async move {
-    //         info!("Checking file size again: {}", total_file_size);
-    //         upload_plans(upload_files, total_file_size).await
-    //     }
-    // });
+    let name = use_signal(|| String::new());
+    let email = use_signal(|| String::new());
+    let mobile = use_signal(|| 0u32);
+    let error = use_signal(|| String::new());
 
     rsx! {
         div{
              class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
              span{
-                        class:"font-helvetica font-[200] text-[45px]",
-                        " Your details"
-             },
-             FormInput{}
+                class:"font-helvetica font-[200] text-[45px]",
+                " Your details"
+             }
+            FormInput{
+                name:name,
+                email:email,
+                mobile:mobile,
+                error:error
+            }
+            if !error().is_empty()
+            {
+                div {
+                    class:"mt-4 font-helvetica font-[300] text-[16px] text-red-500 italic",
+                    "{error()}"
+                }
+
+            }
+
         }
     }
-    // match &*upload_files_future.read_unchecked() {
-    // Some(Ok(response)) => rsx! {
-    //    div{
-    //        // class:"w-full h-screen bg-grid bg-[size:sm] md:bg-[size:md] lg:bg-[size:lg]",
-    //        class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
-    //        span{
-    //            class:"font-helvetica font-[200] text-[45px]",
-    //            " Your details {response :?}"
-    //        }
-    //        FormInput{}
-    //    }
-    // },
-    // Some(Err(_)) => rsx! {
-    //     div{
-    //          class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
-    //          span{
-    //              class:"font-helvetica font-[200] text-[45px] text-red-500",
-    //              "Error!"
-    //          }
-    //     }
-    // },
-    // None => rsx! { div{
-    //      class: "w-full h-screen bg-grid flex flex-col items-center justify-center m-4",
-    //      // PulseEffect{}
-    //      span{
-    //          class:"font-helvetica font-[200] text-[45px] text-blue-400",
-    //          "Loading ..."
-    //      }
-    // }},
 }
 
 //-USER FORM TO VERIFY USER EMAIL
 #[component]
-pub fn FormInput() -> Element {
+pub fn FormInput(
+    name: Signal<String>,
+    email: Signal<String>,
+    mobile: Signal<u32>,
+    error: Signal<String>,
+) -> Element {
     rsx! {
         form{
-            onsubmit: move |event| {
-                info!("Submitted! {event:?}");
-                info!("Submitted {:?}", event);
+            onsubmit: move |evt| {
+                evt.prevent_default();
+            //     info!("Submitted {:?}", evt);
+
+            //     if name().len() <3{
+            //         error.set(String::from("Name cannot be less than 3 letters"));
+            //     }
             },
-            class:"w-[90%] md:w-[40%] flex flex-col gap-4 text-black flex  ",
+            class:"w-[90%] md:w-[40%] lg:w-[30%] flex flex-col gap-4 text-black flex  ",
             //NAME SECTION
             div{
                 class:"flex flex-col py-2",
@@ -85,13 +72,22 @@ pub fn FormInput() -> Element {
 
                 label{
                     class: "font-source_code_pro font-[300] text-[14px] text-slate-500",
-                    "your name or your company name"
+                    "your name or company name - 3 letters atleast"
                 }
                 input {
                     r#type:"text",
-                    class:"p-2 w-full h-[60px] bg-blue-50 border border-slate-300 font-helvetica font-[200] text-[18px]",
+                    class:"p-2 w-full h-[60px] bg-blue-50 border border-slate-300 font-helvetica font-[300] text-[18px]",
                     name: "name" ,
-                    value:"",
+                     value:"{name}",
+                    autofocus:true,
+                    // minlength:3,
+                    // maxlength:50,
+                    oninput:move |evt| {
+                        name.set(evt.value());
+
+
+                    }
+
                     // placeholder:"Enter your name or company name",
                 }
             }
@@ -117,10 +113,10 @@ pub fn FormInput() -> Element {
 
                 input {
                     r#type:"email",
-                    class:"p-2 w-full h-[60px] bg-blue-50 border border-slate-300 font-helvetica font-[200] text-[18px]",
+                    class:"p-2 w-full h-[60px] bg-blue-50 border border-slate-300 font-helvetica font-[300] text-[18px]",
                     name: "email" ,
                     value:"",
-                    // placeholder:"We will send measurements to provided email",
+                   oninput:move |evt| email.set(evt.value()),
                 }
             }
             // MOBILE SECTION
@@ -140,39 +136,35 @@ pub fn FormInput() -> Element {
                 }
                 input {
                     r#type:"number",
-                    class:"p-2 w-full h-[60px] bg-blue-50 border border-slate-300 font-helvetica font-[100] text-[18px]",
+                    class:"p-2 w-full h-[60px] bg-blue-50 border border-slate-300 font-helvetica font-[300] text-[18px]",
                     name: "phone_number" ,
                     value:"",
+                     oninput:move |evt|{
+                         let value = evt.value();
+                         if let Ok(parsed_value) = value.parse::<u32>(){
+                             mobile.set(parsed_value);
+                         }
+
+                    }
                     // placeholder:"Your contact phone number",
                 }
             }
             //SEND BUTTON
            div{
-               class:"flex items-center justify-center",
+               class:"mt-4 flex items-center justify-center cursor-pointer",
                button {
-                   onclick:  move |_| {
+                   onclick:  move |evt| {
+                         evt.prevent_default();
+                         // Email regex pattern for validation
+                        let email_regex = Regex::new(r"^[\w\.-]+@[\w\.-]+\.\w+$").unwrap();
+                         if name().len() <3{
+                             error.set(String::from("Name cannot be less than 3 letters"));
+                         }
+                         if !email_regex.is_match(&email()) {
+                             error.set("Invalid email format.".to_string());
+                        }
+                        navigator().push(Route::Verification {  });
 
-
-                       // spawn(async move
-                       // {
-                       //          info!("Submit button");
-                       //          let res = upload_plans(upload_files(), total_file_size()).await;
-
-                       //          match res {
-                       //              Ok(_)=>{
-                       //                  info!("Files have been uploaded to S3..")
-                       //              }
-                       //              Err(e)=>{
-                       //                  error!("Error {:?}",e)
-                       //              }
-                       //          }
-
-                       //          // for i in upload_files.read().iter() {
-                       //          //     tracing::warn!("checking before passing");
-                       //          //     tracing::info!("{:#?}", i);
-                       //          // }
-
-                       //  });
                    },
                    class:" w-[20%] h-[60px] p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-zinc-100
                    hover:bg-blue-700 cursor-pointer flex items-center justify-center

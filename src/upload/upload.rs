@@ -1,8 +1,4 @@
-use crate::service::service::get_presigned_url;
-use crate::service::service::multi_part_upload;
-use crate::service::service::single_part_upload;
 use crate::service::service::upload_plans;
-use crate::service::service::zip_files_in_memory;
 use crate::service::service::UploadFile;
 use crate::Route;
 use crate::ThemeContext;
@@ -10,12 +6,6 @@ use dioxus::logger::tracing::error;
 use dioxus::logger::tracing::info;
 use dioxus::prelude::*;
 use round::round;
-
-// #[derive(Clone, Copy)]
-// pub struct UploadContext {
-//     pub upload_files: Signal<Vec<UploadFile>>,
-//     pub total_file_size: Signal<f64>,
-// }
 
 #[component]
 pub fn Upload() -> Element {
@@ -30,90 +20,6 @@ pub fn Upload() -> Element {
     let mut percentage = use_signal(|| 0.0f32);
     let mut current_chunk = use_signal(|| 0usize);
     let mut total_chunk = use_signal(|| 0usize);
-
-    // let upload_resource = use_resource(move || {
-    //     async move {
-    //         //THIS RESOURCE WILL RUN ONLY AFTER THE SUBMIT BUTTON IS PRESSED
-    //         if submitting() {
-    //             match zip_files_in_memory(upload_files(), total_file_size()) {
-    //                 Ok((zip_file, zip_size)) => {
-    //                     info!("Zipping completed successfully!");
-    //                     info!("Total zipped size: {}", zip_size);
-    //                     // --------------------zipping------------------------------------
-
-    //                     info!("Step 2 -Presigning...");
-    //                     match get_presigned_url(zip_size).await {
-    //                         Ok(presigned) => {
-    //                             // ---------------------presigned-----------------------------------
-    //                             // Step 3: Uploading Files
-    //                             // SINGLE PART
-    //                             if presigned.urls.len() == 1 {
-    //                                 // Single-part upload
-    //                                 if let Err(e) =
-    //                                     single_part_upload(zip_file.clone(), presigned.urls.clone())
-    //                                         .await
-    //                                 {
-    //                                     error!("Failed during single-part upload: {:?}", e);
-    //                                     progress.set(-1.0);
-    //                                 }
-    //                                 //MULTI PART
-    //                             } else {
-    //                                 match presigned.upload_id {
-    //                                     Some(upload_id) => {
-    //                                         match multi_part_upload(
-    //                                             upload_id,
-    //                                             zip_file.clone(),
-    //                                             presigned.urls,
-    //                                             &mut current_chunk,
-    //                                             &mut total_chunk,
-    //                                             &mut progress,
-    //                                             // |current, total, percent| {
-    //                                             //     // dioxus::prelude::spawn(async move {
-    //                                             //     //     current_chunk.set(current);
-    //                                             //     //     total_chunks.set(total);
-    //                                             //     //     progress.set(percent);
-    //                                             //     // });
-    //                                             //     current_chunk.set(current);
-    //                                             //     total_chunks.set(total);
-    //                                             //     progress.set(percent);
-    //                                             // },
-    //                                         )
-    //                                         .await
-    //                                         {
-    //                                             Ok(_) => {}
-    //                                             Err(e) => {
-    //                                                 error!(
-    //                                                     "Failed during multi-part upload: {:?}",
-    //                                                     e
-    //                                                 );
-    //                                                 progress.set(-5.0);
-    //                                             }
-    //                                         }
-    //                                     }
-    //                                     None => {
-    //                                         error!("No upload ID returned for multipart upload");
-    //                                         progress.set(-2.0);
-    //                                     }
-    //                                 }
-    //                             }
-    //                         }
-    //                         Err(e) => {
-    //                             error!("Failed to get presigned URL: {:?}", e);
-    //                             progress.set(-3.0); // Indicate error in progress
-    //                         }
-    //                     };
-    //                 }
-    //                 Err(e) => {
-    //                     error!("Failed to zip files: {:?}", e);
-    //                     progress.set(-4.0); // Indicate error in progress
-    //                 }
-    //             }
-    //             Some(())
-    //         } else {
-    //             None
-    //         }
-    //     }
-    // });
 
     //BROWSING FILES NOT SUBMITTED
     if !submitting() {
@@ -184,7 +90,6 @@ pub fn Upload() -> Element {
                                     scroll-smooth border border-red-0
                                     ",
                                     for (index, (name, size)) in filenames.read().iter().enumerate() {
-                                            // let formatted_size = format!("{:.2}", size); // Pre
 
                                         div {
                                             class:"flex flex-row items-center justify-start space-x-2 py-2
@@ -207,8 +112,7 @@ pub fn Upload() -> Element {
 
                                 }
 
-                                // NO FILES HAVE BEEN SELECTED -BROWSE BUTTON
-                            // OR BROWSE THE FILES
+                            // NO FILES HAVE BEEN SELECTED -BROWSE BUTTON
                             else{
                                 div {
                                     class:"w-full h-full flex flex-col items-center justify-center mt-6",
@@ -297,8 +201,7 @@ pub fn Upload() -> Element {
                                         upload_files.write().clear();
                                         filenames.write().clear();
                                         total_file_size.set(0.0);
-
-
+                                        submitting.set(false);
 
                                     },
                                     class:"p-3 border border-black font-helvetica font-[300] text-[16px]
@@ -335,16 +238,6 @@ pub fn Upload() -> Element {
                                     "Submit"
                                 }
 
-
-
-                                //SUBMIT LINK
-                                // Link {
-                                //     class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
-                                //     hover:bg-blue-700 cursor-pointer items-center justify-center
-                                //     ",
-                                //     to: Route::UserForm { upload_files: upload_files().clone(), total_file_size: total_file_size().clone() },
-                                //     "Submit"
-                                // }
                             }
                         }
 
@@ -357,24 +250,47 @@ pub fn Upload() -> Element {
         rsx! {
             div{
                 class:"w-full h-screen flex flex-col justify-center items-center relative space-y-1",
-                div{
-                    class:"w-40 h-40 bg-blue-500 rounded-full animate-pulse"
+                if percentage() >=75.0 {
+                    div{
+                        class:"w-40 h-40 bg-green-500 rounded-full animate-pulse"
+                    }
+                }
+                else{
+                    div{
+                        class:"w-40 h-40 bg-blue-500 rounded-full animate-pulse"
+                    }
                 }
                 span{
                     class:"font-helvetica font-[200] text-[30px] bg-slate-50 text-center",
                     "Uploading"
                 }
-                div {
-                    class: "mt-4 text-center font-helvetica font-[200]",
-                    h2 { "Progress: {percentage:.2}% ({current_chunk} / {total_chunk})" }
+                //ONLY FOR MULTI PART UPLOADS
+                if total_file_size() >= 5.0 {
                     div {
-                        class: "w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-2",
+                        class: "mt-4 text-center font-helvetica font-[200]",
+                        h2 { "Progress: {percentage:.2}% ({current_chunk} / {total_chunk})" }
                         div {
-                            class: "h-full bg-blue-500 font-helvetica font-[200]",
-                            style: "width: {percentage}%;"
+                            class: "w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-2",
+                            if percentage() >=75.0 {
+                                div {
+                                    class: "h-full bg-green-500 font-helvetica font-[200]",
+                                    style: "width: {percentage}%;"
+                                }
+                            }
+                            else{
+                                div {
+                                    class: "h-full bg-blue-500 font-helvetica font-[200]",
+                                    style: "width: {percentage}%;"
+                                }
+                            }
                         }
                     }
                 }
+                span{
+                    class:"font-helvetica font-[300] text-[14px] text-slate-400 italic text-center",
+                    "Files more than 20 MB can take several minutes"
+                }
+
             }
         }
     }

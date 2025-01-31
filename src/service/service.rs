@@ -41,6 +41,12 @@ pub struct PresignedResponse {
     pub upload_id: Option<String>,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct Verification {
+    pub code: u32,
+    pub saved_to_db: String,
+}
+
 pub(crate) async fn upload_plans(
     upload_files: Vec<UploadFile>,
     total_file_size: f64,
@@ -201,7 +207,7 @@ pub(crate) async fn multi_part_upload(
         info!("{}", "-".repeat(45));
         percentage_signal.set(percent);
         info!("percent:{percent}");
-        current_chunk_signal.set(index);
+        current_chunk_signal.set(index + 1);
         info!("current_chunk:{index}");
         total_chunk_signal.set(total_chunks);
         info!("total_chunk:{total_chunks}");
@@ -370,45 +376,6 @@ pub(crate) async fn multi_part_upload(
 //     }
 // }
 
-// GET THE PRESIGNED URL FROM THE BACKEND
-pub(crate) async fn get_presigned_url(size_in_bytes: usize) -> Result<PresignedResponse, Error> {
-    info!("size: {}", size_in_bytes);
-    let lambda_url = format!(
-        "http://localhost:9000/lambda-url/lambda_upload_plans/?bucket={}&key={}&size={}",
-        "dioxus-upload", "files.zip", size_in_bytes
-    );
-    // let lambda_url1 = format!(
-    //     "http://localhost:9000/lambda-url/upload_files/?bucket={}&key={}",
-    //     "dioxus-upload", "files.zip"
-    // );
-    info!("Calling for presigned url");
-    let response = reqwest::get(&lambda_url)
-        .await
-        .context("Error making GET request")?;
-
-    info!("{}", "*".repeat(45));
-    info!("Raw Response Metadata: {:?}", response);
-
-    // Ensure the response is successful
-    if !response.status().is_success() {
-        return Err(anyhow::anyhow!(
-            "Request failed with status: {}",
-            response.status()
-        ));
-    }
-
-    // let response = reqwest::get(&lambda_url).await;
-    // info!("Raw Response Metadata: {:?}", response);
-
-    let json: PresignedResponse = response.json().await.context("Error converting to json")?;
-    // info!("Json Response: {:?}", json.urls);
-    for url in json.urls.iter() {
-        info!("Presigned URL: {}", url);
-    }
-    info!("{}", "*".repeat(45));
-    Ok(json)
-}
-
 pub(crate) fn zip_files_in_memory(
     upload_files: Vec<UploadFile>,
     total_file_size: f64,
@@ -450,4 +417,76 @@ pub(crate) fn zip_files_in_memory(
 
     //RETURN THE ZIP FILE AND THE TOTAL SIZE TO WORKOUT SINGLE OR MULTI-PART
     Ok((zip_data, zip_size_bytes))
+}
+
+// GET THE PRESIGNED URL FROM THE BACKEND
+pub(crate) async fn get_presigned_url(size_in_bytes: usize) -> Result<PresignedResponse, Error> {
+    info!("size: {}", size_in_bytes);
+    let lambda_url = format!(
+        "http://localhost:9000/lambda-url/lambda_upload_plans/?bucket={}&key={}&size={}",
+        "dioxus-upload", "files.zip", size_in_bytes
+    );
+    // let lambda_url1 = format!(
+    //     "http://localhost:9000/lambda-url/upload_files/?bucket={}&key={}",
+    //     "dioxus-upload", "files.zip"
+    // );
+    info!("Calling for presigned url");
+    let response = reqwest::get(&lambda_url)
+        .await
+        .context("Error making GET PRESIGNED request")?;
+
+    info!("{}", "*".repeat(45));
+    info!("Raw Response Metadata: {:?}", response);
+
+    // Ensure the response is successful
+    if !response.status().is_success() {
+        return Err(anyhow::anyhow!(
+            "Request Presigned failed with status: {}",
+            response.status()
+        ));
+    }
+
+    // let response = reqwest::get(&lambda_url).await;
+    // info!("Raw Response Metadata: {:?}", response);
+
+    let json: PresignedResponse = response.json().await.context("Error converting to json")?;
+    // info!("Json Response: {:?}", json.urls);
+    for url in json.urls.iter() {
+        info!("Presigned URL: {}", url);
+    }
+    info!("{}", "*".repeat(45));
+    Ok(json)
+}
+
+pub(crate) async fn send_email_request(
+    name: String,
+    email: String,
+    mobile: u32,
+) -> Result<Verification, Error> {
+    info!(
+        "Checking before sending, name: {}, email:{}, mobile:{}",
+        name, email, mobile
+    );
+    let lambda_url = format!(
+        "http://localhost:9000/lambda-url/lambda_upload_plans/?name={}&email={}&mobile={}",
+        name, email, mobile
+    );
+
+    let response = reqwest::get(&lambda_url)
+        .await
+        .context("Error making GET EMAIL request")?;
+
+    if !response.status().is_success() {
+        return Err(anyhow::anyhow!(
+            "Request Email failed with status: {}",
+            response.status()
+        ));
+    }
+
+    let json: Verification = response.json().await.context("Error converting to json")?;
+
+    info!("Code  = {}", json.code);
+    info!("Saved_to_db  = {}", json.saved_to_db);
+
+    Ok(json)
 }

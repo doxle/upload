@@ -8,6 +8,8 @@ mod components {
 // use components::navbar::Navbar;
 mod home;
 use home::home::Home;
+mod coffee;
+use coffee::coffee::Coffee;
 mod upload;
 use upload::upload::Upload;
 mod legal;
@@ -17,6 +19,8 @@ use jot::jot::Jot;
 mod service;
 mod user_form;
 use user_form::user_form::UserForm;
+mod verification;
+use verification::verification::Verification;
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 
@@ -25,6 +29,8 @@ enum Route {
     #[route("/")]
     Home {},
     #[route("/jot")]
+    Coffee {},
+    #[route("/coffee")]
     Jot {},
     #[route("/canvas")]
     Canvas {},
@@ -34,6 +40,8 @@ enum Route {
     Legal {},
     #[route("/user_form")]
     UserForm {},
+    #[route("/verification")]
+    Verification {},
     #[route("/blog/:id")]
     Blog { id: i32 },
 }

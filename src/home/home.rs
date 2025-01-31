@@ -33,10 +33,7 @@ pub fn Home() -> Element {
                  bg-[url('/assets/page_grid.svg')] bg-no-repeat
                   bg-[cover,auto_100%]
                  ",
-                // img {
-                //     class:"w-full md:hidden z-0 ",
-                //     src:"/assets/page_grid.svg"
-                // }
+
                 div{
                     style:" margin:0; padding:0;",
                     class:"md:m-0 md:hidden  w-full h-full flex
@@ -119,17 +116,28 @@ pub fn Home() -> Element {
 
                             Link {
                                 class:"p-4 border border-black font-helvetica font-[300]  text-[16px] bg-black text-white
-                                hover:bg-blue-700",
+                                hover:bg-blue-700 cursor-pointer",
                                 to: Route:: Upload {},
                                 "Upload Plans"
 
                             }
-                            button{
-                                class:"p-4 border border-[rgb(45,45,49)] font-helvetica font-[300] text-[16px]
-                                hover:font-[400] ",
-                                // to: Route:: UserForm  {},
-                                "Buy us a coffee"
+                            div{
+                                class:"m-0 p-0 flex flex-row bg-red-0 border border-[rgb(45,45,49)] cursor-pointer
+                                justify-start items-center space-x-2 p-4
+                                ",
+                                img {
+                                    class:"h-5 w-5",
+                                    src:"/assets/coffee.svg",
+                                }
+                                Link{
+                                    style:"cursor:pointer;",
+                                    class:"font-helvetica font-[300] text-[16px]
+                                    hover:font-[400] ",
+                                    to: Route:: Coffee {},
+                                    "Buy us a coffee"
+                                }
                             }
+
 
                         }
                     }
@@ -143,8 +151,8 @@ pub fn Home() -> Element {
             div{
                 // style:"background:yellow; opacity:0.1;",
 
-                class: "mt-0 h-[40%] md:m-0 md:p-0 md:w-[50%] md:h-[100vh] md:[100%]
-                        md:bg-[url('/assets/page_grid.svg')] md:bg-no-repeat
+                class: "mt-0 h-[40%] md:m-0 md:p-0 md:w-[50%] md:h-[100vh] md:h-screen
+                        md:bg-[url('/assets/page_grid.svg')] md:bg-cover md:bg-no-repeat
                         items-center justify-center flex border-t-[1px] border-[rgb(230,230,235)]
                         md:border-[0px]
                         ",
@@ -189,24 +197,19 @@ pub fn Home() -> Element {
                     div{
                         class:"flex flex-row items-center justify-start space-x-2",
                         style:"margin-top:2rem;",
-                        // button{
-                        //     class:"p-3 border border-black font-helvetica font-light text-[16px] bg-black text-white
-                        //     hover:bg-blue-700",
-                        //     "Upload Plans"
-                        // }
 
                         Link {
                             class:"p-3 border border-black font-helvetica font-light text-[16px] bg-black text-white
-                            hover:bg-blue-700",
+                            hover:bg-blue-700 cursor-pointer",
                             to: Route:: Upload {},
                             "Upload Plans"
 
                         }
-                        button{
+                        Link{
                             class:"p-4 border border-[rgb(45,45,49)] font-helvetica font-[300] text-[16px]
-                            hover:font-[400] ",
-                            // to: Route:: UserForm  {},
-                            "About Us"
+                            hover:font-[400] cursor-pointer ",
+                            to: Route:: Coffee {  } ,
+                            "Buy us a coffee"
                         }
                     }
 
