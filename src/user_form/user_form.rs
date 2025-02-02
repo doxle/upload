@@ -1,7 +1,6 @@
+use crate::Route;
 use dioxus::prelude::*;
 use regex::Regex;
-
-use crate::{verification::verification::VerificationProps, Route};
 
 #[component]
 pub fn UserForm() -> Element {

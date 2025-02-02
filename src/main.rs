@@ -25,7 +25,7 @@ use verification::verification::Verification;
 // use verification::verification::VerificationProps;
 
 #[derive(Debug, Clone, Routable)]
-#[rustfmt::skip]
+// #[rustfmt::skip]
 enum Route {
     // #[layout(Navbar)]
     #[route("/")]
@@ -46,7 +46,11 @@ enum Route {
     // Verification { query_params: VerificationProps },
     //
     #[route("/verification/:name/:email/:mobile")]
-    Verification{name:String, email:String, mobile:String},
+    Verification {
+        name: String,
+        email: String,
+        mobile: String,
+    },
     #[route("/blog/:id")]
     Blog { id: i32 },
 }
