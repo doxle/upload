@@ -21,7 +21,7 @@ struct ETag {
     etag: String,
 }
 
-pub(crate) struct UploadProgress {
+pub(crate) struct _UploadProgress {
     pub current_chunk: usize,
     pub total_chunk: usize,
     pub percentage: f32,
@@ -461,7 +461,7 @@ pub(crate) async fn get_presigned_url(size_in_bytes: usize) -> Result<PresignedR
 pub(crate) async fn send_email_request(
     name: String,
     email: String,
-    mobile: u32,
+    mobile: String,
 ) -> Result<Verification, Error> {
     info!(
         "Checking before sending, name: {}, email:{}, mobile:{}",

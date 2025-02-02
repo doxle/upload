@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+
 mod canvas;
 use canvas::canvas::Canvas;
 mod components {
@@ -21,9 +22,10 @@ mod user_form;
 use user_form::user_form::UserForm;
 mod verification;
 use verification::verification::Verification;
+// use verification::verification::VerificationProps;
 
-#[derive(Debug, Clone, Routable, PartialEq)]
-
+#[derive(Debug, Clone, Routable)]
+#[rustfmt::skip]
 enum Route {
     // #[layout(Navbar)]
     #[route("/")]
@@ -40,8 +42,11 @@ enum Route {
     Legal {},
     #[route("/user_form")]
     UserForm {},
-    #[route("/verification")]
-    Verification {},
+    // #[route("/verification?:query_params")]
+    // Verification { query_params: VerificationProps },
+    //
+    #[route("/verification/:name/:email/:mobile")]
+    Verification{name:String, email:String, mobile:String},
     #[route("/blog/:id")]
     Blog { id: i32 },
 }

@@ -1,13 +1,13 @@
 use dioxus::prelude::*;
 use regex::Regex;
 
-use crate::Route;
+use crate::{verification::verification::VerificationProps, Route};
 
 #[component]
 pub fn UserForm() -> Element {
     let name = use_signal(|| String::new());
     let email = use_signal(|| String::new());
-    let mobile = use_signal(|| 0u32);
+    let mobile = use_signal(|| String::new());
     let error = use_signal(|| String::new());
 
     rsx! {
@@ -41,7 +41,7 @@ pub fn UserForm() -> Element {
 pub fn FormInput(
     name: Signal<String>,
     email: Signal<String>,
-    mobile: Signal<u32>,
+    mobile: Signal<String>,
     error: Signal<String>,
 ) -> Element {
     rsx! {
@@ -139,13 +139,8 @@ pub fn FormInput(
                     class:"p-2 w-full h-[60px] bg-blue-50 border border-slate-300 font-helvetica font-[300] text-[18px]",
                     name: "phone_number" ,
                     value:"",
-                     oninput:move |evt|{
-                         let value = evt.value();
-                         if let Ok(parsed_value) = value.parse::<u32>(){
-                             mobile.set(parsed_value);
-                         }
+                     oninput:move |evt| mobile.set(evt.value()),
 
-                    }
                     // placeholder:"Your contact phone number",
                 }
             }
@@ -157,13 +152,26 @@ pub fn FormInput(
                          evt.prevent_default();
                          // Email regex pattern for validation
                         let email_regex = Regex::new(r"^[\w\.-]+@[\w\.-]+\.\w+$").unwrap();
-                         if name().len() <3{
+                         if name().len() < 3{
                              error.set(String::from("Name cannot be less than 3 letters"));
                          }
                          if !email_regex.is_match(&email()) {
                              error.set("Invalid email format.".to_string());
                         }
-                        navigator().push(Route::Verification {  });
+                        // let verification_props = VerificationProps{
+                        //     name:name(),
+                        //     email:email(),
+                        //     mobile:mobile()
+
+                        // };
+
+                        navigator().push(Route::Verification {
+                            name:name(),
+                            email:email(),
+                            mobile:mobile(),
+                        });
+
+
 
                    },
                    class:" w-[20%] h-[60px] p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-zinc-100
