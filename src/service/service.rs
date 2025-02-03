@@ -41,10 +41,23 @@ pub struct PresignedResponse {
     pub upload_id: Option<String>,
 }
 
+// #[derive(Deserialize, Debug)]
+// pub struct Verification {
+//     pub code: u32,
+//     pub saved_to_db: String,
+// }
+
 #[derive(Deserialize, Debug)]
-pub struct Verification {
-    pub code: u32,
-    pub saved_to_db: String,
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DbStatus {
+    SUCCESS,
+    ERROR,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct VerificationResponse {
+    pub code: String,
+    pub db_status: DbStatus,
 }
 
 pub(crate) async fn upload_plans(
@@ -458,11 +471,12 @@ pub(crate) async fn get_presigned_url(size_in_bytes: usize) -> Result<PresignedR
     Ok(json)
 }
 
+//SEND VERIFICATION CODE TO USER
 pub(crate) async fn send_email_request(
     name: String,
     email: String,
     mobile: String,
-) -> Result<Verification, Error> {
+) -> Result<(String, DbStatus), Error> {
     info!(
         "Checking before sending, name: {}, email:{}, mobile:{}",
         name, email, mobile
@@ -482,11 +496,17 @@ pub(crate) async fn send_email_request(
             response.status()
         ));
     }
+    info!("Text: {:?} ", response);
 
-    let json: Verification = response.json().await.context("Error converting to json")?;
+    let json: VerificationResponse = response.json().await.context("Error converting to json")?;
 
-    info!("Code  = {}", json.code);
-    info!("Saved_to_db  = {}", json.saved_to_db);
+    info!("Verification Response: {:?}", json);
 
-    Ok(json)
+    let code = json.code;
+    let db_status = json.db_status;
+
+    // info!("Code  = {}", json.code);
+    // info!("Saved_to_db  = {}", json.saved_to_db);
+
+    Ok((code, db_status))
 }

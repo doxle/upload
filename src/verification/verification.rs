@@ -1,22 +1,11 @@
-use crate::{service::service::send_email_request, Route};
-use dioxus::logger::tracing::info;
+use crate::Route;
 use dioxus::prelude::*;
 use gloo_timers::callback::Timeout;
 
 #[component]
-pub fn Verification(name: String, email: String, mobile: String) -> Element {
-    info!("Verifying");
+pub fn Verification() -> Element {
     let status = use_signal(|| String::from("Verifying"));
     let is_routing = use_signal(|| false);
-    info!("Name: {}", name);
-
-    spawn(async move {
-        let response = send_email_request(name, email, mobile).await;
-        match response {
-            Ok(json) => info!("Json response {:?}", json),
-            Err(e) => info!("Err {:?}", e),
-        }
-    });
 
     let start_timer = move || {
         let mut status = status.clone();
@@ -39,7 +28,9 @@ pub fn Verification(name: String, email: String, mobile: String) -> Element {
     use_effect(move || {
         start_timer();
         if is_routing() {
-            navigator().push(Route::Home {});
+            navigator().push(Route::UserForm {
+                verify_code: "true".to_string(),
+            });
         }
     });
 

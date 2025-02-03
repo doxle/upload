@@ -223,7 +223,9 @@ pub fn Upload() -> Element {
 
                                         match res {
                                             Ok(_)=>{
-                                                navigator().push(Route::UserForm {  });
+                                                navigator().push(Route::UserForm {
+                                                    verify_code:"false".to_string()
+                                                });
                                                 info!("Files have been uploaded to S3..")
 
                                             }
