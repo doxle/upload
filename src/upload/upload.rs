@@ -9,7 +9,7 @@ use round::round;
 
 #[component]
 pub fn Upload() -> Element {
-    // let mut upload_title = use_signal(|| String::from("Upload your plans"));
+    let mut is_checked = use_signal(|| String::from("false"));
     let mut upload_files: Signal<Vec<UploadFile>> = use_signal(|| vec![]);
     let mut filenames: Signal<Vec<(String, f64)>> = use_signal(|| vec![]);
     let mut total_file_size: Signal<f64> = use_signal(|| 0f64);
@@ -20,6 +20,7 @@ pub fn Upload() -> Element {
     let mut percentage = use_signal(|| 0.0f32);
     let mut current_chunk = use_signal(|| 0usize);
     let mut total_chunk = use_signal(|| 0usize);
+    let mut error = use_signal(|| "");
 
     //BROWSING FILES NOT SUBMITTED
     if !submitting() {
@@ -74,10 +75,19 @@ pub fn Upload() -> Element {
                             }
                         }
 
+                        //ERROR MESSAGE TO AGREE TO TERMS AND CONDITIONS
+                        if is_checked() == "false"
+                        {
+                            div {
+                                class:"mt-4 text-[14px] md:text-[16px   ] font-helvetica font-[300] text-red-500 italic",
+                                "{error}"
+                            }
+                        }
+
                         // UPLOAD - LIGHT BLUE RECT DIV
                         div{
                             // style:" background:green;",
-                            class:"p-1 w-full flex flex-col flex-1 bg-blue-100 mt-3 bg-opacity-60
+                            class:"w-[90%] md:w-full flex flex-col flex-1 bg-blue-100 m-3 bg-opacity-60
                             items-start justify-start border-2 border-dotted border-slate-300
                             overflow-y-auto max-h-[70vh]
                             ",
@@ -99,18 +109,20 @@ pub fn Upload() -> Element {
                                                 src: "/assets/blue_file.svg",
                                             }
                                             p{
-                                                class:"font-helvetica font-[300] text-[16px] ",
+                                                class:"font-helvetica font-[300] text-[14px] md:text-[16px] ",
                                                 "{index+1}) {name}"
                                             }
                                             p{
-                                                class:"font-helvetica font-[300] text-[15px] italic text-blue-500 ",
+                                                class:"font-helvetica font-[300] text-[14px] md:text-[16px] italic text-blue-500 ",
                                                 "{size:.2} MB"
                                             }
                                         }
                                     }
-                                }
 
                                 }
+
+
+                            }
 
                             // NO FILES HAVE BEEN SELECTED -BROWSE BUTTON
                             else{
@@ -190,21 +202,68 @@ pub fn Upload() -> Element {
                             }
                         }
 
+
                         // BOTTOM BUTTONS OF UNDO AND SUBMIT
                         if filenames().len() > 0 {
+                            div{
+                                class:"h-[10%] flex flex-row space-x-4 items-center bg-amber-00 mt-[21px] ml-4 mr-4",
+                                div{
+                                    class:"flex items-center relative",
+                                    input {
+                                        class:"
+                                        appearance-none rounded-full w-6 h-6 md:w-8 md:h-8
+                                        border border-slate-400 checked:bg-blue-700
+                                        cursor-pointer focus:ring-2 focus:ring-blue-400
+                                        sm:w-5 sm:h-5 aspect-[1/1]
+                                        ",
+                                        r#type:"checkbox",
+                                        autofocus:true,
+                                        oninput:move|evt| {
+                                            // println!("Checking value: {:?}", &evt.value());
+                                            info!("Checking value: {:?}", &evt.value());
+                                            info!("Checking data: {:?}", &evt.data());
+                                            *is_checked.write() = evt.value()
+
+                                        }
+
+                                    }
+                                    //SHOW THE TICK ICON
+                                    if is_checked() == "true" {
+                                        img {
+                                            class:"absolute w-4 h-4 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+                                            src:"/assets/check-white.svg",
+                                        }
+                                    }
+
+                                }
+
+
+                                span{
+                                    class:"text-start font-helvetica font-[300] text-[14px] text-[rgb(120,120,120)] text-center",
+                                    "By uploading your building plans to Doxle.ai, you confirm you have the necessary permissions
+                                    to upload the plans and acknowledge they may be protected by copyright.
+                                    For detailed information, please review our "
+                                    span{
+                                        class:"font-helvetica font-[300] underline text-blue-600",
+                                        " Terms & Conditions "
+                                    }
+                                }
+                            }
                             div {
-                                class:"flex flex-row items-center justify-center mt-6 space-x-2",
-                                //RESET BUTTON
+                                class:"flex flex-row items-center justify-center mt-12  md:mt-6 space-x-2",
+                                //UNDO BUTTON
                                 button {
                                     onclick: move |_| {
                                         //RESET
                                         upload_files.write().clear();
+                                        error.set("");
                                         filenames.write().clear();
                                         total_file_size.set(0.0);
                                         submitting.set(false);
+                                        is_checked.set("false".to_string());
 
                                     },
-                                    class:"p-3 border border-black font-helvetica font-[300] text-[16px]
+                                    class:"w-[90px] h-[60px] p-3 border border-black font-helvetica font-[300] text-[16px]
                                     hover:font-[400] cursor-pointer items-center justify-center
                                     ",
                                     "Undo"
@@ -212,34 +271,40 @@ pub fn Upload() -> Element {
                                 //SUBMIT BUTTON
                                 button {
                                     onclick:  move |_| async move{
-                                        *submitting.write() = true;
-                                        let res = upload_plans(
-                                                upload_files(),
-                                                total_file_size(),
-                                                &mut current_chunk,
-                                                &mut total_chunk,
-                                                &mut percentage
-                                            ).await;
+                                        // ONLY IF THE TERMS AND CONDITIONS ARE SELECTED
+                                        if is_checked() == "true" {
+                                            *submitting.write() = true;
+                                            let res = upload_plans(
+                                                    upload_files(),
+                                                    total_file_size(),
+                                                    &mut current_chunk,
+                                                    &mut total_chunk,
+                                                    &mut percentage
+                                                ).await;
 
-                                        match res {
-                                            Ok(_)=>{
-                                                navigator().push(Route::UserForm {
-                                                    verify_code:"false".to_string()
-                                                });
-                                                info!("Files have been uploaded to S3..")
+                                            match res {
+                                                Ok(_)=>{
+                                                    navigator().push(Route::UserForm {
+                                                        // verify_code:"false".to_string()
+                                                    });
+                                                    info!("Files have been uploaded to S3..")
 
-                                            }
-                                            Err(e)=>{
-                                                error!("Error {:?}",e)
+                                                }
+                                                Err(e)=>{
+                                                    error!("Error {:?}",e)
+                                                }
                                             }
                                         }
+                                        //TERMS & CONDITIONS ARE NOT CHECKED
+                                        else{
+                                            error.set("Select the checkbox to agree to the Terms and Conditions");
+                                        }
                                     },
-                                    class:"p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
+                                    class:"w-[90px] h-[60px] p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
                                     hover:bg-blue-700 cursor-pointer items-center justify-center
                                     ",
                                     "Submit"
                                 }
-
                             }
                         }
 

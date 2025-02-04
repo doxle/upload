@@ -193,23 +193,33 @@ pub fn Home() -> Element {
                         "Upload your building plans and get a personalised budget delivered straight to your inbox!
                         (We’re in beta!)"
                     }
-                    // 2 BUTTONS
+                    // 2 BUTTONS MOBILE
                     div{
                         class:"flex flex-row items-center justify-start space-x-2",
                         style:"margin-top:2rem;",
 
                         Link {
-                            class:"p-3 border border-black font-helvetica font-light text-[16px] bg-black text-white
+                            class:"p-4 border border-black font-helvetica font-light text-[16px] bg-black text-white
                             hover:bg-blue-700 cursor-pointer",
                             to: Route:: Upload {},
                             "Upload Plans"
 
                         }
-                        Link{
-                            class:"p-4 border border-[rgb(45,45,49)] font-helvetica font-[300] text-[16px]
-                            hover:font-[400] cursor-pointer ",
-                            to: Route:: Coffee {  } ,
-                            "Buy us a coffee"
+                        div{
+                            class:"m-0 p-0 flex flex-row bg-red-0 border border-[rgb(45,45,49)] cursor-pointer
+                            justify-start items-center space-x-2 p-4
+                            ",
+                            img {
+                                class:"h-5 w-5",
+                                src:"/assets/coffee.svg",
+                            }
+                            Link{
+                                style:"cursor:pointer;",
+                                class:"font-helvetica font-[300] text-[16px]
+                                hover:font-[400] ",
+                                to: Route:: Coffee {},
+                                "Buy us a coffee"
+                            }
                         }
                     }
 

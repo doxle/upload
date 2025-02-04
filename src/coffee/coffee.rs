@@ -10,25 +10,26 @@ pub fn Coffee() -> Element {
     rsx! {
         div{
              class: "w-full h-screen flex flex-col items-center justify-start overflow-y-auto",
-                div{
-                    class:"mt-[5%]  flex flex-row items-center justify-center bg-cyan-0 space-x-4",
-                    img{
-                        class:"flex items-center",
-                        src:"/assets/dog-blue.svg"
-                    }
-                    span{
-                         class:"font-helvetica font-[200] text-[54px] text-blue-600 text-center ",
-                         "{status}"
-                     }
-                }
 
                div{
-                    class:"md:w-[50%] h-[150vh]  bg-red-0",
-                    //MAIN PARAGRAPH
+                    class:"w-[90%] md:w-[50%] h-[150vh]  bg-red-0 items-center",
+                    //THANK YOU
                     div{
-                        class:"mt-[2%] md:w-[95%]  ",
+                        class:"mt-[5%]  flex flex-row items-center justify-center bg-cyan-00 space-x-4",
+                        img{
+                            class:"flex items-center",
+                            src:"/assets/dog-blue.svg"
+                        }
                         span{
-                             class:"mt-4 font-helvetica font-[200] text-[18px]  text-center text-black",
+                             class:"font-helvetica font-[200] text-[54px] text-blue-600 text-center ",
+                             "{status}"
+                         }
+                    }
+                    //LARGE TEXT
+                    div{
+                        class:"mt-[2%] w-[100%] flex items-center justify-start ",
+                        span{
+                             class:"mt-4 font-helvetica font-[300] text-[14px] text-black",
                              "We are Doxle—a dedicated and passionate team with a bold vision: to create a fully automated estimating software for the
                              building and construction industry.
 
@@ -43,19 +44,19 @@ pub fn Coffee() -> Element {
                              ensuring it delivers the impact we envision."
 
                              span{
-                                 class:"mt-1 font-helvetica font-[200] text-[18px] block text-start",
+                                 class:"mt-1 font-helvetica font-[300] text-[14px] block text-start",
                                  "As dog lovers ourselves, we believe in loyalty, dedication, and the joy of doing what we love—traits that fuel both our lives
                                  and our work at Doxle. After all, building a better world is something you can really sink your paws into! 🐾"
                              }
                          }
 
-                   }
+                    }
                    //ONLY DONATE
                    div{
                         class:"mt-4 flex flex-col md: w-[95%] h-[10%] font-[400] ",
 
                         span{
-                            class:"mt-1 font-helvetica font-[200] text-[18px] block text-start text-newutral-950 italic",
+                            class:"mt-1 font-helvetica font-[300] text-[14px] block text-start text-newutral-950 italic",
                         "Only donate if you can afford it and would like us to keep innovating. Either way, we appreciate your support and thanks for
                         using Doxle :)"
                         }
@@ -65,10 +66,10 @@ pub fn Coffee() -> Element {
                            class:"mt-4 pl-0 flex flex-row bg-red-0 h-[100px] items-center justify-start space-x-4",
                            input {
                                class:"
-                               appearance-none rounded-full w-8 h-8
+                               appearance-none rounded-full w-6 h-6
                                border border-slate-600 checked:bg-blue-700
                                cursor-pointer focus:ring-2 focus:ring-blue-400
-                               sm:w-5 sm:h-5 aspect-[1/1]
+                               aspect-[1/1]
                                ",
                                r#type:"radio",
                                name:"amount",
@@ -83,13 +84,13 @@ pub fn Coffee() -> Element {
                            }
                            if selected_value() != "$10" {
                                span{
-                                   class:"font-helvetica font-[200] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[300] text-[24px] block text-start text-blue-600",
                                "$10"
                                }
                            }
                            else{
                                span{
-                                   class:"font-helvetica font-[300] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[400] text-[24px] block text-start text-blue-600",
                                "$10"
                                }
                            }
@@ -100,10 +101,10 @@ pub fn Coffee() -> Element {
                            class:"mt-4 pl-0 flex flex-row bg-red-0 h-[100px] items-center justify-start space-x-4",
                            input {
                                class:"
-                               appearance-none rounded-full w-8 h-8
+                               appearance-none rounded-full w-6 h-6
                                border border-slate-600 checked:bg-blue-700
                                cursor-pointer focus:ring-2 focus:ring-blue-400
-                               sm:w-5 sm:h-5 aspect-[1/1]
+                               aspect-[1/1]
                                ",
                                r#type:"radio",
                                name:"amount",
@@ -118,13 +119,13 @@ pub fn Coffee() -> Element {
                            }
                            if selected_value() != "$25" {
                                span{
-                                   class:"font-helvetica font-[200] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[300] text-[24px] block text-start text-blue-600",
                                "$25"
                                }
                            }
                            else{
                                span{
-                                   class:"font-helvetica font-[300] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[400] text-[24px] block text-start text-blue-600",
                                "$25"
                                }
                            }
@@ -136,10 +137,10 @@ pub fn Coffee() -> Element {
                            class:"mt-4 pl-0 flex flex-row bg-red-0 h-[100px] items-center justify-start space-x-4",
                            input {
                                class:"
-                               appearance-none rounded-full w-8 h-8
+                               appearance-none rounded-full w-6 h-6
                                border border-slate-600 checked:bg-blue-700
                                cursor-pointer focus:ring-2 focus:ring-blue-400
-                               sm:w-5 sm:h-5 aspect-[1/1]
+                               aspect-[1/1]
                                ",
                                r#type:"radio",
                                name:"amount",
@@ -152,13 +153,13 @@ pub fn Coffee() -> Element {
                            }
                            if selected_value() != "$50" {
                                span{
-                                   class:"font-helvetica font-[200] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[300] text-[24px] block text-start text-blue-600",
                                "$50"
                                }
                            }
                            else{
                                span{
-                                   class:"font-helvetica font-[300] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[400] text-[24px] block text-start text-blue-600",
                                "$50"
                                }
                            }
@@ -170,10 +171,10 @@ pub fn Coffee() -> Element {
                            class:"mt-4 pl-0 flex flex-row bg-red-0 h-[100px] items-center justify-start space-x-4",
                            input {
                                class:"
-                               appearance-none rounded-full w-8 h-8
+                               appearance-none rounded-full w-6 h-6
                                border border-slate-600 checked:bg-blue-700
                                cursor-pointer focus:ring-2 focus:ring-blue-400
-                               sm:w-5 sm:h-5 aspect-[1/1]
+                               aspect-[1/1]
                                ",
                                r#type:"radio",
                                name:"amount",
@@ -188,13 +189,13 @@ pub fn Coffee() -> Element {
                            }
                            if selected_value() != "$100" {
                                span{
-                                   class:"font-helvetica font-[200] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[300] text-[24px] block text-start text-blue-600",
                                "$100"
                                }
                            }
                            else{
                                span{
-                                   class:"font-helvetica font-[300] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[400] text-[24px] block text-start text-blue-600",
                                "$100"
                                }
                            }
@@ -206,10 +207,10 @@ pub fn Coffee() -> Element {
                            class:"mt-4 pl-0 flex flex-row bg-red-0 h-[100px] items-center justify-start space-x-4",
                            input {
                                class:"
-                               appearance-none rounded-full w-8 h-8
+                               appearance-none rounded-full w-6 h-6
                                border border-slate-600 checked:bg-blue-700
                                cursor-pointer focus:ring-2 focus:ring-blue-400
-                               sm:w-5 sm:h-5 aspect-[1/1]
+                                aspect-[1/1]
                                ",
                                r#type:"radio",
                                name:"amount",
@@ -222,13 +223,13 @@ pub fn Coffee() -> Element {
                            }
                            if selected_value() != "custom" {
                                span{
-                                   class:"font-helvetica font-[200] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[300] text-[24px] block text-start text-blue-600",
                                "Custom"
                                }
                            }
                            else{
                                span{
-                                   class:"font-helvetica font-[300] text-[27px] block text-start text-blue-600",
+                                   class:"font-helvetica font-[400] text-[24px] block text-start text-blue-600",
                                "Custom"
                                }
                            }
@@ -250,11 +251,11 @@ pub fn Coffee() -> Element {
                                    // maxlength:10,
                                    oninput:move |evt| {
                                        another_amount.set(evt.value().parse::<i32>().unwrap_or(0) );
-
                                    }
                                }
                            }
                        }
+                       //BACK AND NEXT BUTTONS
                        div{
                            class:"mt-8 flex flex-row items-center justify-center space-x-2",
                            button {
@@ -262,7 +263,7 @@ pub fn Coffee() -> Element {
                                    navigator().go_back();
 
                                },
-                               class:" w-[14%] h-[60px] p-3 border border-black font-helvetica font-[300] text-[16px]
+                               class:" w-[90px] h-[60px] p-3 border border-black font-helvetica font-[300] text-[16px]
                                hover:bg-blue-100 cursor-pointer flex items-center justify-center
                                ",
                                "Back"
@@ -272,7 +273,7 @@ pub fn Coffee() -> Element {
                                    evt.prevent_default();
 
                                },
-                               class:" w-[14%] h-[60px] p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
+                               class:" w-[90px] h-[60px] p-3 border border-black font-helvetica font-[300] text-[16px] bg-[rgb(45,45,49)] text-white
                                hover:bg-blue-700 cursor-pointer flex items-center justify-center
                                ",
                                "Next"
